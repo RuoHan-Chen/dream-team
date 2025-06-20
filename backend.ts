@@ -28,7 +28,7 @@ import { processPriceToAtomicAmount } from 'x402/shared';
 // Removed @coinbase/x402 facilitator - will use URL-based facilitator instead
 
 // Load environment variables
-config({ path: ".env-local" });
+config({ path: ".env" });
 
 // Initialize API clients
 const exa = new Exa(process.env.EXA_API_KEY!);
@@ -254,7 +254,8 @@ app.get("/health", (c) => {
 
 // SIWE Authentication Routes
 app.get("/auth/nonce", (c) => {
-  const nonce = nanoid();
+  // Generate alphanumeric nonce for SIWE (no underscores or hyphens)
+  const nonce = nanoid().replace(/[_-]/g, '').substring(0, 16);
   nonceStore[nonce] = Date.now();
   return c.json({ nonce });
 });
@@ -607,6 +608,11 @@ app.post("/api/search/answer", verifyAuth, async (c) => {
         });
         return c.json({ error: "Schedule date must be in the future" }, 400);
       }
+
+      // TODO: Add timezone support
+      // Currently all dates are processed in server timezone
+      // Future enhancement: Accept user timezone preference and convert accordingly
+      // For now, users should use ISO format with timezone offset or UTC
 
       // Ensure scheduled date is at least 5 minutes in the future to account for processing time
       const minFutureTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes from now

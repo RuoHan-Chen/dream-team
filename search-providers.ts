@@ -5,7 +5,7 @@ import { tavily } from '@tavily/core';
 import { config } from 'dotenv';
 
 // Load environment variables
-config({ path: '.env-local' });
+config({ path: '.env' });
 
 // Initialize clients
 const exa = new Exa(process.env.EXASEARCH_API_KEY || '');
