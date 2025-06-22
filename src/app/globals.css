@@ -8,8 +8,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Suisse Int'l", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "Suisse Int'l", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Roboto Mono", "Courier New", Courier, monospace;
+  --font-mono: "Roboto Mono", "Courier New", Courier, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,7 +23,7 @@ body {
   background-color: #1a1a2e;
   color: #f0f0f0;
   background-image: radial-gradient(circle at top right, rgba(147, 197, 253, 0.2), transparent 40%), radial-gradient(circle at bottom left, rgba(147, 197, 253, 0.2), transparent 40%);
-  font-family: "Suisse Int'l", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Roboto Mono", "Courier New", Courier, monospace;
 }
 
 .calendar-picker-light::-webkit-calendar-picker-indicator {
