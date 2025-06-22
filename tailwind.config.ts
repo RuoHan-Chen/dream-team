@@ -9,8 +9,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Suisse Int\'l"', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
-        mono: ['"Suisse Int\'l"', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        sans: ['"Roboto Mono"', '"Courier New"', 'Courier', 'monospace'],
+        mono: ['"Roboto Mono"', '"Courier New"', 'Courier', 'monospace'],
       },
       colors: {
         'web3-purple': {

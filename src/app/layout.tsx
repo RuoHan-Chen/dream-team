@@ -27,10 +27,13 @@ export default function RootLayout({
       <head>
         <title>Dream Market</title>
         <meta name="description" content="Predict the future, earn rewards" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body
         className="antialiased"
-        style={{ fontFamily: '"Suisse Int\'l", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
+        style={{ fontFamily: '"Roboto Mono", "Courier New", Courier, monospace' }}
       >
         <Providers>
           <div className="min-h-screen">
