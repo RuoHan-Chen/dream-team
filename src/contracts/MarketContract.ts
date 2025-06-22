@@ -1,16 +1,79 @@
-export const marketContractAddress = '0xYourContractAddressHere'; // TODO: Replace with your deployed prediction market contract address
+// TODO: Replace with your deployed BooleanPredictionEscrow contract address
+export const marketContractAddress = 'undefined';
 
 export const marketContractAbi = [
   {
-    "type": "function",
-    "name": "placeBet",
     "inputs": [
-      { "name": "marketId", "type": "uint256", "internalType": "uint256" },
-      { "name": "side", "type": "uint8", "internalType": "uint8" }, // 0 for NO, 1 for YES
-      { "name": "amount", "type": "uint256", "internalType": "uint256" }
+      { "name": "prediction", "type": "bool" },
+      { "name": "amount", "type": "uint256" }
     ],
+    "name": "placeBet",
     "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "name": "outcome", "type": "bool" }
+    ],
+    "name": "resolveAndDistribute",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "question",
+    "outputs": [{ "name": "", "type": "string" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "deadline",
+    "outputs": [{ "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "state",
+    "outputs": [{ "name": "", "type": "uint8" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalTrue",
+    "outputs": [{ "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalFalse",
+    "outputs": [{ "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalPool",
+    "outputs": [{ "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "name": "", "type": "address" }],
+    "name": "bets",
+    "outputs": [
+      { "name": "hasBet", "type": "bool" },
+      { "name": "prediction", "type": "bool" },
+      { "name": "amount", "type": "uint256" },
+      { "name": "paidOut", "type": "bool" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   }
 ] as const;
 

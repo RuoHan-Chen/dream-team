@@ -9,7 +9,7 @@ import {
   useCallback,
 } from 'react';
 import { useRouter } from 'next/navigation';
-import { useWriteContract } from 'wagmi';
+import { useWriteContract, useReadContract } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
 import {
   marketContractAddress,
@@ -44,6 +44,7 @@ interface Market {
   resolved: 'YES' | 'NO' | null;
   historicalBets: Bet[];
   oddsHistory: OddsHistory[];
+  contractAddress?: `0x${string}`; // Address of the deployed contract
 }
 
 interface MarketContextType {
@@ -57,6 +58,10 @@ const MarketContext = createContext<MarketContextType | undefined>(undefined);
 
 interface MarketProviderProps {
   children: ReactNode;
+}
+
+function toHexAddress(addr: string): `0x${string}` {
+  return addr as `0x${string}`;
 }
 
 // --- Provider Component ---
@@ -87,19 +92,27 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({ children }) => {
   }, [markets]);
 
   const addMarket = useCallback(
-    (marketData: Omit<Market, 'id' | 'poolSize' | 'yesBets' | 'noBets' | 'resolved' | 'historicalBets' | 'oddsHistory'>) => {
-      const newMarket: Market = {
-        ...marketData,
-        id: markets.length + 1,
-        poolSize: 0,
-        yesBets: 0,
-        noBets: 0,
-        resolved: null,
-        historicalBets: [],
-        oddsHistory: [],
-      };
-      setMarkets((prevMarkets) => [...prevMarkets, newMarket]);
-      router.push('/');
+    async (marketData: Omit<Market, 'id' | 'poolSize' | 'yesBets' | 'noBets' | 'resolved' | 'historicalBets' | 'oddsHistory'>) => {
+      try {
+        // For now, we'll create a mock market without deploying a contract
+        // In a real implementation, you would deploy the contract here
+        const newMarket: Market = {
+          ...marketData,
+          id: markets.length + 1,
+          poolSize: 0,
+          yesBets: 0,
+          noBets: 0,
+          resolved: null,
+          historicalBets: [],
+          oddsHistory: [],
+          contractAddress: (`0xMockContract${markets.length + 1}` as `0x${string}`), // Mock address
+        };
+        setMarkets((prevMarkets) => [...prevMarkets, newMarket]);
+        router.push('/');
+      } catch (error) {
+        console.error('Failed to create market:', error);
+        alert('Failed to create market. Please try again.');
+      }
     },
     [markets, router]
   );
@@ -116,7 +129,7 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({ children }) => {
   };
 
   const placeBet = useCallback(
-    (marketId: number, selectedOutcome: 'YES' | 'NO', amount: number) => {
+    async (marketId: number, selectedOutcome: 'YES' | 'NO', amount: number) => {
       if (!authenticated) {
         alert('Please connect your wallet to place a bet.');
         login();
@@ -130,48 +143,29 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({ children }) => {
         return;
       }
 
-      if (marketContractAddress === '0xYourContractAddressHere') {
-        alert('Please replace "0xYourContractAddressHere" with your deployed contract address in src/contracts/MarketContract.ts');
+      const market = markets.find(m => m.id === marketId);
+      if (!market) {
+        alert('Market not found.');
         return;
       }
-      
-      console.log('Placing bet...', { marketId, selectedOutcome, amount, userAddress });
-      
-      writeContractAsync({
-        address: pyusdContractAddress,
-        abi: pyusdContractAbi,
-        functionName: 'approve',
-        args: [marketContractAddress, parseUnits(amount.toString(), 6)],
-      })
-      .then(() => {
-        return writeContractAsync({
-          address: marketContractAddress,
-          abi: marketContractAbi,
-          functionName: 'placeBet',
-          args: [
-            BigInt(marketId),
-            selectedOutcome === 'YES' ? 1 : 0,
-            parseUnits(amount.toString(), 6)
-          ],
-        });
-      })
-      .then(() => {
-        alert('Bet placed successfully!');
-        const updatedMarkets = markets.map((market) => {
-          if (market.id === marketId) {
+
+      if (!market.contractAddress || market.contractAddress.startsWith('0xMockContract')) {
+        // For mock markets, update the local state
+        const updatedMarkets = markets.map((m) => {
+          if (m.id === marketId) {
             const newBet: Bet = {
-              id: market.historicalBets.length + 1,
+              id: m.historicalBets.length + 1,
               user: userAddress,
               side: selectedOutcome,
               amount: amount,
               time: new Date().toISOString(),
             };
             const updatedMarket = {
-              ...market,
-              poolSize: market.poolSize + amount,
-              yesBets: selectedOutcome === 'YES' ? market.yesBets + amount : market.yesBets,
-              noBets: selectedOutcome === 'NO' ? market.noBets + amount : market.noBets,
-              historicalBets: [...market.historicalBets, newBet],
+              ...m,
+              poolSize: m.poolSize + amount,
+              yesBets: selectedOutcome === 'YES' ? m.yesBets + amount : m.yesBets,
+              noBets: selectedOutcome === 'NO' ? m.noBets + amount : m.noBets,
+              historicalBets: [...m.historicalBets, newBet],
             };
             // Recalculate odds and update history
             const { yesBets, noBets } = updatedMarket;
@@ -180,14 +174,74 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({ children }) => {
             updatedMarket.oddsHistory.push({ time: Date.now(), yesOdds });
             return updatedMarket;
           }
-          return market;
+          return m;
         });
         setMarkets(updatedMarkets);
-      })
-      .catch((err) => {
+        alert('Bet placed successfully!');
+        return;
+      }
+
+      // For real contracts, interact with the blockchain
+      if (!market.contractAddress) {
+        alert('Market contract address is missing.');
+        return;
+      }
+      if (!/^0x[a-fA-F0-9]{40}$/.test(market.contractAddress)) {
+        alert('Market contract address is not a valid Ethereum address.');
+        return;
+      }
+      try {
+        console.log('Placing bet on contract...', { marketId, selectedOutcome, amount, userAddress });
+        
+        // First approve the contract to spend PYUSD
+        await writeContractAsync({
+          address: pyusdContractAddress,
+          abi: pyusdContractAbi,
+          functionName: 'approve',
+          args: [market.contractAddress, parseUnits(amount.toString(), 6)],
+        });
+
+        // Then place the bet
+        await writeContractAsync({
+          address: toHexAddress(market.contractAddress),
+          abi: marketContractAbi,
+          functionName: 'placeBet',
+          args: [selectedOutcome === 'YES', parseUnits(amount.toString(), 6)],
+        });
+
+        alert('Bet placed successfully!');
+        
+        // Update local state to reflect the bet
+        const updatedMarkets = markets.map((m) => {
+          if (m.id === marketId) {
+            const newBet: Bet = {
+              id: m.historicalBets.length + 1,
+              user: userAddress,
+              side: selectedOutcome,
+              amount: amount,
+              time: new Date().toISOString(),
+            };
+            const updatedMarket = {
+              ...m,
+              poolSize: m.poolSize + amount,
+              yesBets: selectedOutcome === 'YES' ? m.yesBets + amount : m.yesBets,
+              noBets: selectedOutcome === 'NO' ? m.noBets + amount : m.noBets,
+              historicalBets: [...m.historicalBets, newBet],
+            };
+            // Recalculate odds and update history
+            const { yesBets, noBets } = updatedMarket;
+            const totalBets = yesBets + noBets;
+            const yesOdds = totalBets > 0 ? (yesBets / totalBets) * 100 : 50;
+            updatedMarket.oddsHistory.push({ time: Date.now(), yesOdds });
+            return updatedMarket;
+          }
+          return m;
+        });
+        setMarkets(updatedMarkets);
+      } catch (err) {
         console.error('Transaction failed', err);
         alert('Transaction failed. See console for details.');
-      });
+      }
     },
     [markets, writeContractAsync, authenticated, user, login]
   );
