@@ -177,7 +177,6 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({ children }) => {
           return m;
         });
         setMarkets(updatedMarkets);
-        alert('Bet placed successfully!');
         return;
       }
 
@@ -209,8 +208,6 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({ children }) => {
           args: [selectedOutcome === 'YES', parseUnits(amount.toString(), 6)],
         });
 
-        alert('Bet placed successfully!');
-        
         // Update local state to reflect the bet
         const updatedMarkets = markets.map((m) => {
           if (m.id === marketId) {

@@ -8,15 +8,17 @@ export default function HomePage() {
   return (
     <main className="flex min-h-screen flex-col items-center p-8 md:p-24">
       <div className="w-full max-w-5xl">
-        <header className="flex flex-wrap justify-between items-center mb-3 gap-4">
-          <Image
-            src="/logo.png"
-            alt="Dream Market Logo"
-            width={200}
-            height={60}
-            className="h-24 md:h-36 w-auto"
-            priority
-          />
+        <header className="flex flex-wrap justify-between items-center mb-0 gap-4">
+          <Link href="/" className="block hover:scale-105 transition-transform duration-200">
+            <Image
+              src="/logo.png"
+              alt="Dream Market Logo"
+              width={200}
+              height={60}
+              className="h-24 md:h-36 w-auto"
+              priority
+            />
+          </Link>
           <div className="flex items-center gap-4">
             <ConnectWallet />
           </div>
