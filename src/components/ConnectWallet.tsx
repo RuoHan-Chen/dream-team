@@ -16,6 +16,7 @@ export function ConnectWallet() {
   }
 
   const walletClientType = user?.wallet?.walletClientType;
+  
   // Format the wallet type to be more readable (e.g., 'coinbase-wallet' -> 'Coinbase Wallet')
   const walletDisplayName = walletClientType
     ? walletClientType
@@ -40,7 +41,7 @@ export function ConnectWallet() {
           </div>
           <button
             onClick={logout}
-            className="bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition-colors text-sm"
+            className="bg-white/10 hover:bg-white/20 text-white font-medium py-2 px-4 rounded-md backdrop-blur-sm border border-white/20 transition-all duration-300 text-sm"
           >
             Logout
           </button>
@@ -48,7 +49,7 @@ export function ConnectWallet() {
       ) : (
         <button
           onClick={login}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors"
+          className="bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-4 rounded-md backdrop-blur-sm border border-white/20 transition-all duration-300"
         >
           Connect Wallet
         </button>

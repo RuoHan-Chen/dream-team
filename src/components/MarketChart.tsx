@@ -11,6 +11,38 @@ interface MarketChartProps {
   data: OddsHistoryPoint[];
 }
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={{
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        borderRadius: '8px',
+        padding: '12px',
+        backdropFilter: 'blur(8px)',
+      }}>
+        <p style={{ color: '#fff', margin: '0 0 8px 0', fontSize: '14px' }}>
+          <strong>Time: {label}</strong>
+        </p>
+        {payload.map((entry: any, index: number) => (
+          <p key={index} style={{ 
+            color: entry.color, 
+            margin: '4px 0', 
+            fontSize: '13px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '12px'
+          }}>
+            <span>{entry.name}:</span>
+            <span><strong>{entry.value.toFixed(1)}%</strong></span>
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 export const MarketChart: React.FC<MarketChartProps> = ({ data }) => {
   const formattedData = data.map(point => ({
     ...point,
@@ -39,14 +71,7 @@ export const MarketChart: React.FC<MarketChartProps> = ({ data }) => {
             domain={[0, 100]}
             tickFormatter={(value) => `${value}%`}
           />
-          <Tooltip
-            contentStyle={{ 
-              backgroundColor: 'rgba(255, 255, 255, 0.1)', 
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              backdropFilter: 'blur(4px)',
-            }}
-            labelStyle={{ color: '#fff' }}
-          />
+          <Tooltip content={<CustomTooltip />} />
           <Legend wrapperStyle={{ color: '#fff' }} />
           <Line type="monotone" dataKey="yesOdds" name="YES Odds" stroke="#10B981" strokeWidth={2} dot={false} />
           <Line type="monotone" dataKey="noOdds" name="NO Odds" stroke="#EF4444" strokeWidth={2} dot={false} />
