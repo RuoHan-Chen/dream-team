@@ -108,13 +108,37 @@ export default function MarketDetailPage() {
                 <Clock size={16} className="mr-2" />
                 <span>Ends: {new Date(market.ends).toLocaleString()}</span>
               </div>
-              <div className="flex items-center text-gray-300 text-sm mb-6">
+              <div className="flex items-center text-gray-300 text-sm mb-2">
                 <Info size={16} className="mr-2" />
-                <span>Resolves via: <em className="text-gray-200">{market.searchQuery}</em></span>
+                <span>Resolves via: </span>
+                <a 
+                  href={`https://www.google.com/search?q=${encodeURIComponent(market.searchQuery)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 underline ml-1"
+                >
+                  {market.searchQuery.length > 30 ? `${market.searchQuery.slice(0, 30)}...` : market.searchQuery}
+                </a>
               </div>
+              {market.contractAddress && (
+                <div className="flex items-center text-gray-300 text-sm mb-6">
+                  <Info size={16} className="mr-2" />
+                  <span>Contract: </span>
+                  <a 
+                    href={`https://sepolia.etherscan.io/address/${market.contractAddress}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 hover:text-blue-300 underline ml-1 font-mono"
+                  >
+                    {market.contractAddress.slice(0, 6)}...{market.contractAddress.slice(-4)}
+                  </a>
+                </div>
+              )}
 
               <div className="h-64 md:h-80 bg-white/5 rounded-lg p-4 mb-6 backdrop-blur-sm border border-white/10">
-                <MarketChart data={market.oddsHistory} />
+                <MarketChart 
+                  data={market.oddsHistory} 
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 text-center">

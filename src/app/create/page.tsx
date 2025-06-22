@@ -81,7 +81,7 @@ export default function CreateMarketPage() {
           });
           router.push('/active');
         }
-      }, 5000); // Wait 5 seconds for transaction to be mined
+      }, 10000); // Wait 5 seconds for transaction to be mined
 
     } catch (error) {
       console.error('Deployment error:', error);
