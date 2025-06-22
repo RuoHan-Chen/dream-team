@@ -4,6 +4,12 @@ import { useState } from 'react';
 import { useMarkets } from '@/context/MarketContext';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+
+const MarketChart = dynamic(() => import('@/components/MarketChart').then(mod => mod.MarketChart), {
+  loading: () => <p className="text-center text-white/50">Loading chart...</p>,
+  ssr: false
+});
 
 export default function MarketDetailPage() {
   const { markets, placeBet } = useMarkets();
@@ -50,6 +56,10 @@ export default function MarketDetailPage() {
         <p className="text-center text-white/60 mb-12">
           Time until resolution: {new Date(market.resolutionTime).toLocaleString()}
         </p>
+        
+        <div className="mb-12">
+          <MarketChart data={market.oddsHistory} />
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 text-center">
           <div className="bg-white/10 p-6 rounded-lg">

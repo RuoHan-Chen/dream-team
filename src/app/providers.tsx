@@ -6,6 +6,7 @@ import { config } from '@/wagmi'
 import { MarketProvider } from '@/context/MarketContext'
 import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
+import { ClientOnly } from '@/components/ClientOnly';
 
 const queryClient = new QueryClient()
 
@@ -19,11 +20,13 @@ export function Providers({
   return (
     <WagmiProvider config={config} initialState={initialState}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={darkTheme()}>
-          <MarketProvider>
-            {children}
-          </MarketProvider>
-        </RainbowKitProvider>
+        <ClientOnly>
+          <RainbowKitProvider theme={darkTheme()}>
+            <MarketProvider>
+              {children}
+            </MarketProvider>
+          </RainbowKitProvider>
+        </ClientOnly>
       </QueryClientProvider>
     </WagmiProvider>
   )
