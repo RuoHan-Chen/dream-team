@@ -2,99 +2,85 @@
 
 import { useState } from 'react';
 import { useMarkets } from '@/context/MarketContext';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function CreateMarketPage() {
   const { addMarket } = useMarkets();
+  const router = useRouter();
   const [question, setQuestion] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [resolutionTime, setResolutionTime] = useState('');
+  const [ends, setEnds] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!question || !ends || !searchQuery) {
+      alert('Please fill out all fields.');
+      return;
+    }
     addMarket({
-      title: question,
+      question,
       searchQuery,
-      resolutionTime,
+      ends: new Date(ends).getTime(),
     });
   };
 
-  const inputStyles = "w-full p-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-web3-purple-light focus:outline-none transition-all duration-300";
-
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8 md:p-24">
-      <div className="w-full max-w-2xl">
-        <div className="text-center mb-12">
-          <Link href="/" className="text-sm text-web3-purple-light hover:underline mb-4 block">
-            &larr; Back to Markets
-          </Link>
-          <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-sky-500">
-            Create a New Market
-          </h1>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="space-y-8">
+    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gray-900 text-white">
+      <div className="w-full max-w-2xl bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-700">
+        <button onClick={() => router.back()} className="mb-6 text-sm text-gray-400 hover:text-white transition-colors">
+          &larr; Back to markets
+        </button>
+        <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-purple-400 to-pink-500 text-transparent bg-clip-text">
+          Create a New Market
+        </h1>
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="question" className="block text-lg font-semibold mb-2">
+            <label htmlFor="question" className="block text-sm font-medium text-gray-300 mb-2">
               Market Question
             </label>
-            <p className="text-sm text-white/60 mb-2">
-              Propose a clear, binary (Yes/No) question.
-            </p>
             <input
-              type="text"
               id="question"
+              type="text"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder='e.g., "Will Player X score more than 30 points tonight?"'
-              className={inputStyles}
+              placeholder="e.g., Will ETH reach $5,000 by the end of the year?"
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition"
               required
             />
           </div>
-
           <div>
-            <label htmlFor="search-query" className="block text-lg font-semibold mb-2">
+            <label htmlFor="searchQuery" className="block text-sm font-medium text-gray-300 mb-2">
               Resolution Search Query
             </label>
-            <p className="text-sm text-white/60 mb-2">
-              Provide a web search query that will be used to resolve the market.
-            </p>
             <input
+              id="searchQuery"
               type="text"
-              id="search-query"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder='e.g., "Player X points scored on [date]"'
-              className={inputStyles}
+              placeholder="e.g., ETH price on CoinGecko at end of year"
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition"
               required
             />
           </div>
-
           <div>
-            <label htmlFor="resolution-time" className="block text-lg font-semibold mb-2">
-              Resolution Time
+            <label htmlFor="ends" className="block text-sm font-medium text-gray-300 mb-2">
+              Resolution Date and Time
             </label>
-            <p className="text-sm text-white/60 mb-2">
-              When should the search query be executed to resolve the market?
-            </p>
             <input
+              id="ends"
               type="datetime-local"
-              id="resolution-time"
-              value={resolutionTime}
-              onChange={(e) => setResolutionTime(e.target.value)}
-              className={`${inputStyles} calendar-picker-light`}
+              value={ends}
+              onChange={(e) => setEnds(e.target.value)}
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition calendar-picker-light"
               required
             />
           </div>
-
-          <div className="pt-4">
-            <button
-              type="submit"
-              className="w-full bg-web3-purple/80 border border-web3-purple-light text-white font-bold py-3 px-6 rounded-lg hover:bg-web3-purple transition-colors duration-300 text-lg"
-            >
-              Preview & Confirm Market
-            </button>
-          </div>
+          <button
+            type="submit"
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-all duration-300 ease-in-out transform hover:scale-105"
+          >
+            Create Market
+          </button>
         </form>
       </div>
     </main>

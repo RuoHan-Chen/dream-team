@@ -1,18 +1,10 @@
-import { createConfig, http } from 'wagmi'
-import { mainnet, sepolia } from 'wagmi/chains'
-import { injected, metaMask, walletConnect } from 'wagmi/connectors'
-
-const projectId = 'd89def424collabb10399a5573752ea'; // Replace with your WalletConnect Project ID
+import { createConfig } from '@privy-io/wagmi'
+import { http } from 'wagmi'
+import { sepolia } from 'viem/chains'
 
 export const config = createConfig({
-  chains: [mainnet, sepolia],
-  connectors: [
-    injected(),
-    walletConnect({ projectId }),
-    metaMask(),
-  ],
+  chains: [sepolia],
   transports: {
-    [mainnet.id]: http(),
     [sepolia.id]: http(),
   },
 }) 

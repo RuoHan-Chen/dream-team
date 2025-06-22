@@ -1,33 +1,26 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { WagmiProvider, State } from 'wagmi'
+import { WagmiProvider } from '@privy-io/wagmi'
+import { PrivyProvider } from '@privy-io/react-auth'
+
 import { config } from '@/wagmi'
+import { privyConfig } from '@/privy'
 import { MarketProvider } from '@/context/MarketContext'
-import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
-import '@rainbow-me/rainbowkit/styles.css';
-import { ClientOnly } from '@/components/ClientOnly';
 
 const queryClient = new QueryClient()
 
-export function Providers({ 
-  children,
-  initialState
-}: { 
-  children: React.ReactNode,
-  initialState?: State 
-}) {
+export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <WagmiProvider config={config} initialState={initialState}>
+    <PrivyProvider
+      appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ''}
+      config={privyConfig}
+    >
       <QueryClientProvider client={queryClient}>
-        <ClientOnly>
-          <RainbowKitProvider theme={darkTheme()}>
-            <MarketProvider>
-              {children}
-            </MarketProvider>
-          </RainbowKitProvider>
-        </ClientOnly>
+        <WagmiProvider config={config}>
+          <MarketProvider>{children}</MarketProvider>
+        </WagmiProvider>
       </QueryClientProvider>
-    </WagmiProvider>
+    </PrivyProvider>
   )
 } 
