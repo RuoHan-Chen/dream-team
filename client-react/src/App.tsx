@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { WalletConnect } from './components/WalletConnect';
 import { useWallet } from './contexts/WalletContext';
-import { api, updateApiClient, type SearchResult, type ScheduledQuery, type QueryHistory } from './services/api';
+import { api, updateApiClient, type SearchResult, type ScheduledQuery, type QueryHistory, type MarketCreationResponse, type MarketStatus } from './services/api';
 import './App.css';
 
 function App() {
   const { walletClient, authToken, isConnected, authenticate } = useWallet();
-  const [activeTab, setActiveTab] = useState<'search' | 'pending' | 'history'>('search');
+  const [activeTab, setActiveTab] = useState<'search' | 'pending' | 'history' | 'markets'>('search');
   const [searchQuery, setSearchQuery] = useState('');
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduleDate, setScheduleDate] = useState('');
@@ -17,6 +17,14 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  
+  // Market creation state
+  const [marketQuestion, setMarketQuestion] = useState('');
+  const [marketSearchQuery, setMarketSearchQuery] = useState('');
+  const [marketResolutionDate, setMarketResolutionDate] = useState('');
+  const [createdMarket, setCreatedMarket] = useState<MarketCreationResponse | null>(null);
+  const [marketStatus, setMarketStatus] = useState<MarketStatus | null>(null);
+  const [checkingContractAddress, setCheckingContractAddress] = useState('');
 
   // Calculate dynamic price based on selections
   const calculatePrice = () => {
@@ -174,6 +182,80 @@ function App() {
     return now.toISOString().slice(0, 16);
   };
 
+  const handleCreateMarket = async () => {
+    if (!marketQuestion.trim() || !marketSearchQuery.trim() || !marketResolutionDate) {
+      setError('Please fill in all market fields');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const result = await api.createMarket({
+        marketQuestion,
+        searchQuery: marketSearchQuery,
+        resolutionDate: new Date(marketResolutionDate).toISOString()
+      });
+      
+      setCreatedMarket(result);
+      setSuccess(`Market created successfully! Contract: ${result.marketContractAddress}. Payment of $0.25 USDC processed.`);
+      
+      // Clear form
+      setMarketQuestion('');
+      setMarketSearchQuery('');
+      setMarketResolutionDate('');
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const error = err as { response?: { status?: number; data?: { error?: string; details?: string } } };
+        if (error.response?.status === 402) {
+          setError(`Payment required: ${error.response.data?.error || 'Please ensure you have sufficient USDC balance'}`);
+        } else if (error.response?.data?.error) {
+          setError(`${error.response.data.error}${error.response.data.details ? `: ${error.response.data.details}` : ''}`);
+        } else if ('message' in err) {
+          setError((err as { message: string }).message || 'Market creation failed');
+        } else {
+          setError('Market creation failed');
+        }
+      } else {
+        setError('Market creation failed');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCheckMarketStatus = async () => {
+    if (!checkingContractAddress.trim()) {
+      setError('Please enter a contract address');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const status = await api.getMarketStatus(checkingContractAddress);
+      setMarketStatus(status);
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const error = err as { response?: { status?: number; data?: { error?: string } } };
+        if (error.response?.status === 404) {
+          setError('Market not found');
+        } else if (error.response?.data?.error) {
+          setError(error.response.data.error);
+        } else {
+          setError('Failed to fetch market status');
+        }
+      } else {
+        setError('Failed to fetch market status');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="app">
       <header>
@@ -233,6 +315,12 @@ function App() {
                 onClick={() => setActiveTab('history')}
               >
                 History
+              </button>
+              <button
+                className={`tab ${activeTab === 'markets' ? 'active' : ''}`}
+                onClick={() => setActiveTab('markets')}
+              >
+                Markets
               </button>
             </div>
 
@@ -380,6 +468,114 @@ function App() {
                     ))}
                   </div>
                 )}
+              </section>
+            )}
+
+            {activeTab === 'markets' && (
+              <section className="markets-section">
+                <h3>Create Prediction Market</h3>
+                <div className="market-form">
+                  <div className="form-group">
+                    <label>Market Question</label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Will ETH price be above $3000 by end of year?"
+                      value={marketQuestion}
+                      onChange={(e) => setMarketQuestion(e.target.value)}
+                      className="market-input"
+                      disabled={loading}
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Resolution Search Query</label>
+                    <input
+                      type="text"
+                      placeholder="e.g., current ETH price in USD"
+                      value={marketSearchQuery}
+                      onChange={(e) => setMarketSearchQuery(e.target.value)}
+                      className="market-input"
+                      disabled={loading}
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Resolution Date & Time</label>
+                    <input
+                      type="datetime-local"
+                      value={marketResolutionDate}
+                      onChange={(e) => setMarketResolutionDate(e.target.value)}
+                      min={getMinDateTime()}
+                      className="market-input"
+                      disabled={loading}
+                    />
+                  </div>
+                  
+                  <button
+                    onClick={handleCreateMarket}
+                    disabled={loading}
+                    className="market-button"
+                  >
+                    {loading ? 'Creating...' : 'Create Market ($0.25)'}
+                  </button>
+                </div>
+
+                {createdMarket && (
+                  <div className="market-result">
+                    <h4>Market Created Successfully!</h4>
+                    <div className="market-details">
+                      <p><strong>Contract Address:</strong> <code>{createdMarket.marketContractAddress}</code></p>
+                      <p><strong>Transaction Hash:</strong> <code>{createdMarket.transactionHash}</code></p>
+                      <p><strong>Query ID:</strong> {createdMarket.queryId}</p>
+                      <p><strong>Resolution Scheduled:</strong> {formatDate(createdMarket.scheduledFor)}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="market-status-check">
+                  <h4>Check Market Status</h4>
+                  <div className="status-form">
+                    <input
+                      type="text"
+                      placeholder="Enter contract address (0x...)"
+                      value={checkingContractAddress}
+                      onChange={(e) => setCheckingContractAddress(e.target.value)}
+                      className="market-input"
+                      disabled={loading}
+                    />
+                    <button
+                      onClick={handleCheckMarketStatus}
+                      disabled={loading}
+                      className="status-button"
+                    >
+                      {loading ? 'Checking...' : 'Check Status'}
+                    </button>
+                  </div>
+
+                  {marketStatus && (
+                    <div className="market-status">
+                      <h5>Market Status</h5>
+                      <div className="status-details">
+                        <p><strong>Question:</strong> {marketStatus.marketQuestion}</p>
+                        <p><strong>Search Query:</strong> {marketStatus.searchQuery}</p>
+                        <p><strong>Status:</strong> <span className={`status-badge ${marketStatus.status}`}>{marketStatus.status}</span></p>
+                        <p><strong>Scheduled For:</strong> {formatDate(marketStatus.scheduledFor)}</p>
+                        {marketStatus.executedAt && (
+                          <p><strong>Executed At:</strong> {formatDate(marketStatus.executedAt)}</p>
+                        )}
+                        {marketStatus.summary && (
+                          <div className="market-summary">
+                            <p><strong>Result Summary:</strong></p>
+                            <p>{marketStatus.summary}</p>
+                          </div>
+                        )}
+                        {marketStatus.error && (
+                          <p className="market-error"><strong>Error:</strong> {marketStatus.error}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </section>
             )}
           </>

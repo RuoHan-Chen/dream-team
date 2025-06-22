@@ -72,9 +72,18 @@ db.serialize(() => {
       FOREIGN KEY (query_id) REFERENCES queries(id)
     );
 
+    CREATE TABLE IF NOT EXISTS market_queries (
+      market_contract_address TEXT PRIMARY KEY,
+      query_id INTEGER NOT NULL,
+      market_question TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (query_id) REFERENCES queries(id)
+    );
+
     CREATE INDEX IF NOT EXISTS idx_queries_user_address ON queries(user_address);
     CREATE INDEX IF NOT EXISTS idx_queries_scheduled_for ON queries(scheduled_for);
     CREATE INDEX IF NOT EXISTS idx_queries_status ON queries(status);
+    CREATE INDEX IF NOT EXISTS idx_market_queries_query_id ON market_queries(query_id);
   `);
 
   // Run migrations
@@ -191,7 +200,20 @@ const sql = {
     WHERE q.id = ?
   `,
 
-  deleteQuery: 'DELETE FROM queries WHERE id = ? AND user_address = ? AND status = "pending"'
+  deleteQuery: 'DELETE FROM queries WHERE id = ? AND user_address = ? AND status = "pending"',
+
+  createMarketQuery: `
+    INSERT INTO market_queries (market_contract_address, query_id, market_question)
+    VALUES (?, ?, ?)
+  `,
+
+  getMarketByQueryId: `
+    SELECT * FROM market_queries WHERE query_id = ?
+  `,
+
+  getMarketByContractAddress: `
+    SELECT * FROM market_queries WHERE market_contract_address = ?
+  `
 };
 
 export interface Query {
@@ -260,6 +282,18 @@ export const database = {
     const result = await dbRun(sql.deleteQuery, queryId, userAddress);
     console.log(`Delete query result: changes=${result.changes}`);
     return result.changes > 0;
+  },
+
+  async createMarketQuery(marketContractAddress: string, queryId: number, marketQuestion: string) {
+    await dbRun(sql.createMarketQuery, marketContractAddress, queryId, marketQuestion);
+  },
+
+  async getMarketByQueryId(queryId: number): Promise<any | undefined> {
+    return await dbGet(sql.getMarketByQueryId, queryId) as any | undefined;
+  },
+
+  async getMarketByContractAddress(marketContractAddress: string): Promise<any | undefined> {
+    return await dbGet(sql.getMarketByContractAddress, marketContractAddress) as any | undefined;
   },
 
   close() {

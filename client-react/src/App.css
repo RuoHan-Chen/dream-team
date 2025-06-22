@@ -458,3 +458,200 @@ footer a:hover {
     flex-direction: column;
   }
 }
+
+/* Markets Section Styles */
+.markets-section {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.market-form {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #a0a0a0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.market-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.market-input:focus {
+  outline: none;
+  border-color: #007bff;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.market-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.market-button {
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 12px;
+}
+
+.market-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+}
+
+.market-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.market-result {
+  background: rgba(0, 255, 0, 0.1);
+  border: 1px solid rgba(0, 255, 0, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 32px;
+}
+
+.market-result h4 {
+  color: #4caf50;
+  margin-bottom: 16px;
+}
+
+.market-details p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.market-details code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.market-status-check {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.market-status-check h4 {
+  margin-bottom: 16px;
+  color: #a0a0a0;
+}
+
+.status-form {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.status-form input {
+  flex: 1;
+}
+
+.status-button {
+  padding: 12px 24px;
+  background: #28a745;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.status-button:hover:not(:disabled) {
+  background: #218838;
+}
+
+.status-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.market-status {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.market-status h5 {
+  margin-bottom: 16px;
+  color: #007bff;
+}
+
+.status-details p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.pending {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+}
+
+.status-badge.running {
+  background: rgba(0, 123, 255, 0.2);
+  color: #007bff;
+}
+
+.status-badge.completed {
+  background: rgba(40, 167, 69, 0.2);
+  color: #28a745;
+}
+
+.status-badge.failed {
+  background: rgba(220, 53, 69, 0.2);
+  color: #dc3545;
+}
+
+.market-summary {
+  background: rgba(0, 123, 255, 0.1);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 12px;
+}
+
+.market-error {
+  color: #dc3545;
+  margin-top: 12px;
+}

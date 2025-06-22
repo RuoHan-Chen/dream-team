@@ -102,6 +102,36 @@ export interface QueryHistory {
   error: string | null;
 }
 
+// Market types
+export interface MarketCreationRequest {
+  marketQuestion: string;
+  searchQuery: string;
+  resolutionDate: string;
+}
+
+export interface MarketCreationResponse {
+  success: boolean;
+  marketContractAddress: string;
+  queryId: number;
+  scheduledFor: string;
+  transactionHash: string;
+  message: string;
+  pricePaid: string;
+}
+
+export interface MarketStatus {
+  contractAddress: string;
+  marketQuestion: string;
+  queryId: number;
+  searchQuery: string;
+  scheduledFor: string;
+  status: string;
+  executedAt: string | null;
+  summary: string | null;
+  sources: SearchProviderResult[] | null;
+  error: string | null;
+}
+
 // API endpoints
 export const api = {
   // Search endpoints
@@ -150,6 +180,20 @@ export const api = {
   // Admin endpoint for testing
   executeScheduledQueries: async (): Promise<any> => {
     const response = await apiClient.post("/api/admin/execute-scheduled");
+    return response.data;
+  },
+
+  // Market endpoints
+  createMarket: async (data: MarketCreationRequest): Promise<MarketCreationResponse> => {
+    console.log("🎯 Creating market:", data);
+    const response = await apiClient.post("/api/markets/create", data);
+    console.log("✅ Market created successfully");
+    return response.data;
+  },
+
+  getMarketStatus: async (contractAddress: string): Promise<MarketStatus> => {
+    console.log("📊 Getting market status:", contractAddress);
+    const response = await apiClient.get(`/api/markets/${contractAddress}`);
     return response.data;
   },
 }; 

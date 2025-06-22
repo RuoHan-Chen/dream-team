@@ -27,6 +27,13 @@ import { exact } from 'x402/schemes';
 import { processPriceToAtomicAmount } from 'x402/shared';
 // Removed @coinbase/x402 facilitator - will use URL-based facilitator instead
 
+// Contract deployment dependencies
+import { createWalletClient, http, publicActions } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { sepolia } from 'viem/chains';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
 // Load environment variables
 config({ path: ".env" });
 
@@ -46,6 +53,38 @@ const openai = new OpenAI({
 
 // Tavily client
 const tavilyClient = tavily({ apiKey: process.env.TAVILY_API_KEY! });
+
+// Contract deployment setup
+const deployerPrivateKey = process.env.DEPLOYER_PRIVATE_KEY;
+const oracleAddress = process.env.ORACLE_ADDRESS;
+const stablecoinAddress = process.env.STABLECOIN_ADDRESS;
+
+let walletClient: any = null;
+let contractArtifact: any = null;
+
+if (deployerPrivateKey && oracleAddress && stablecoinAddress) {
+  // Set up wallet client for contract deployment
+  const account = privateKeyToAccount(deployerPrivateKey.startsWith('0x') ? deployerPrivateKey as `0x${string}` : `0x${deployerPrivateKey}` as `0x${string}`);
+  walletClient = createWalletClient({
+    account,
+    chain: sepolia,
+    transport: http(process.env.SEPOLIA_RPC_URL)
+  }).extend(publicActions);
+
+  // Load contract artifact
+  try {
+    const artifactPath = join(process.cwd(), 'dream-team/autodeploy/BooleanPredictionEscrow.json');
+    contractArtifact = JSON.parse(
+      readFileSync(artifactPath, 'utf-8')
+    );
+    console.log('Contract deployment configured successfully');
+    console.log('Contract artifact loaded from:', artifactPath);
+  } catch (error) {
+    console.error('Failed to load contract artifact:', error);
+  }
+} else {
+  console.warn('Contract deployment not configured. Missing DEPLOYER_PRIVATE_KEY, ORACLE_ADDRESS, or STABLECOIN_ADDRESS');
+}
 
 // x402 configuration
 const payTo = process.env.BUSINESS_WALLET_ADDRESS as `0x${string}`;
@@ -721,6 +760,178 @@ app.post("/api/search/answer", verifyAuth, async (c) => {
   } catch (error) {
     console.error("Multi-source search error:", error);
     return c.json({ error: "Search failed" }, 500);
+  }
+});
+
+// Market creation endpoint
+app.post("/api/markets/create", verifyAuth, async (c) => {
+  try {
+    const { marketQuestion, searchQuery, resolutionDate } = await c.req.json();
+    const user = (c.req as any).user;
+
+    // Validate inputs
+    if (!marketQuestion || !searchQuery || !resolutionDate) {
+      return c.json({ error: "Market question, search query, and resolution date are required" }, 400);
+    }
+
+    const scheduledDate = new Date(resolutionDate);
+    if (isNaN(scheduledDate.getTime())) {
+      return c.json({ error: "Invalid resolution date format" }, 400);
+    }
+    if (scheduledDate <= new Date()) {
+      return c.json({ error: "Resolution date must be in the future" }, 400);
+    }
+
+    // Ensure resolution date is at least 5 minutes in the future
+    const minFutureTime = new Date(Date.now() + 5 * 60 * 1000);
+    if (scheduledDate < minFutureTime) {
+      return c.json({ error: "Resolution date must be at least 5 minutes in the future" }, 400);
+    }
+
+    // Check if contract deployment is configured
+    if (!walletClient || !contractArtifact) {
+      return c.json({ error: "Contract deployment not configured on server" }, 500);
+    }
+
+    // Handle x402 payment for market creation (higher price than regular search)
+    const priceString: X402Price = "$0.25"; // Base price for market creation
+    const priceDescription = 'Create prediction market with automated resolution';
+
+    if (payTo) {
+      const resourceUrl = c.req.url as X402Resource;
+
+      // Create payment requirements
+      let paymentRequirements: PaymentRequirements[];
+      try {
+        paymentRequirements = [createExactPaymentRequirements(
+          priceString,
+          resourceUrl,
+          priceDescription
+        )];
+      } catch (error: any) {
+        console.error('[X402Svc] Error creating payment requirements:', error.message);
+        return c.json({ error: 'Server error: Could not create payment requirements.' }, 500);
+      }
+
+      // Handle x402 Payment Flow
+      const x402Result = await handleX402PaymentVerification(c, paymentRequirements);
+
+      // If payment verification failed or a challenge was issued, return the 402 response
+      if (!x402Result.success || !x402Result.decodedPayment || !x402Result.verifiedPayer) {
+        return x402Result.response!;
+      }
+
+      // Settle Payment after successful verification
+      try {
+        const settlement = await settleX402Payment(x402Result.decodedPayment, paymentRequirements[0]);
+        const paymentResponseHeaderVal = settleResponseHeader(settlement);
+        c.header('X-PAYMENT-RESPONSE', paymentResponseHeaderVal);
+        console.log('[X402Svc] Market creation payment settled. Price paid:', priceString);
+      } catch (error: any) {
+        console.error('[X402Svc] Payment settlement failed:', error.message);
+      }
+    }
+
+    // Create scheduled query first
+    const queryId = await database.createQuery(user.address, searchQuery, scheduledDate);
+    console.log(`Created scheduled query ${queryId} for market resolution`);
+
+    // Deploy the escrow contract
+    try {
+      console.log('Deploying BooleanPredictionEscrow contract...');
+      
+      const txHash = await walletClient.deployContract({
+        abi: contractArtifact.abi,
+        bytecode: contractArtifact.bytecode,
+        args: [
+          marketQuestion,
+          BigInt(Math.floor(scheduledDate.getTime() / 1000)), // Convert to Unix timestamp
+          oracleAddress,
+          stablecoinAddress
+        ],
+      });
+
+      console.log(`Contract deployment tx hash: ${txHash}`);
+
+      // Wait for the transaction to be mined and get the contract address
+      const receipt = await walletClient.waitForTransactionReceipt({ hash: txHash });
+      
+      if (receipt.status !== 'success') {
+        throw new Error('Contract deployment failed');
+      }
+
+      const contractAddress = receipt.contractAddress;
+      console.log(`Contract deployed at: ${contractAddress}`);
+
+      // Link the market to the query
+      await database.createMarketQuery(contractAddress, queryId, marketQuestion);
+
+      return c.json({
+        success: true,
+        marketContractAddress: contractAddress,
+        queryId: queryId,
+        scheduledFor: resolutionDate,
+        transactionHash: txHash,
+        message: "Market created successfully. The settlement search will execute at the resolution time.",
+        pricePaid: priceString
+      });
+
+    } catch (deployError) {
+      console.error('Contract deployment error:', deployError);
+      
+      // Clean up the query if deployment failed
+      await database.deleteQuery(queryId, user.address);
+      
+      return c.json({ 
+        error: "Failed to deploy market contract", 
+        details: deployError instanceof Error ? deployError.message : 'Unknown error' 
+      }, 500);
+    }
+
+  } catch (error) {
+    console.error("Market creation error:", error);
+    return c.json({ error: "Market creation failed" }, 500);
+  }
+});
+
+// Get market status by contract address
+app.get("/api/markets/:contractAddress", verifyAuth, async (c) => {
+  try {
+    const contractAddress = c.req.param("contractAddress");
+    const user = (c.req as any).user;
+
+    // Get market data from database
+    const marketQuery = await database.getMarketByContractAddress(contractAddress);
+    if (!marketQuery) {
+      return c.json({ error: "Market not found" }, 404);
+    }
+
+    // Get associated query data
+    const query = await database.getQueryById(marketQuery.query_id);
+    if (!query) {
+      return c.json({ error: "Associated query not found" }, 404);
+    }
+
+    // Only return data if user owns the query
+    if (query.user_address !== user.address) {
+      return c.json({ error: "Unauthorized" }, 403);
+    }
+
+    return c.json({
+      contractAddress: marketQuery.market_contract_address,
+      marketQuestion: marketQuery.market_question,
+      queryId: marketQuery.query_id,
+      searchQuery: query.query,
+      scheduledFor: query.scheduled_for,
+      status: query.status,
+      executedAt: query.executed_at,
+      summary: query.summary,
+      sources: query.sources ? JSON.parse(query.sources) : null,
+      error: query.error
+    });
+  } catch (error) {
+    console.error("Error fetching market status:", error);
+    return c.json({ error: "Failed to fetch market status" }, 500);
   }
 });
 
