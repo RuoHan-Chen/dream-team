@@ -166,11 +166,15 @@ export default function MarketDetailPage() {
               <div className="space-y-4">
                 {market.historicalBets.map(bet => (
                   <div key={bet.id} className="bg-white/5 p-4 rounded-lg flex justify-between items-center">
-                    <div>
-                      <p className="font-bold">{bet.user}</p>
-                      <p className="text-sm text-white/60">{bet.time}</p>
+                    <div className="flex-1 min-w-0 mr-4">
+                      <p className="font-bold text-sm truncate">
+                        {bet.user.slice(0, 6)}...{bet.user.slice(-4)}
+                      </p>
+                      <p className="text-xs text-white/60 truncate">
+                        {new Date(bet.time).toLocaleDateString()} {new Date(bet.time).toLocaleTimeString()}
+                      </p>
                     </div>
-                    <div className={`text-lg font-bold ${bet.side === 'YES' ? 'text-green-400' : 'text-red-400'}`}>
+                    <div className={`text-sm font-bold flex-shrink-0 ${bet.side === 'YES' ? 'text-green-400' : 'text-red-400'}`}>
                       {bet.side} - ${bet.amount}
                     </div>
                   </div>
