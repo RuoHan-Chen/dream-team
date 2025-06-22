@@ -25,3 +25,7 @@ body {
   background-image: radial-gradient(circle at top right, rgba(126, 34, 206, 0.3), transparent 40%), radial-gradient(circle at bottom left, rgba(126, 34, 206, 0.3), transparent 40%);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.calendar-picker-light::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
