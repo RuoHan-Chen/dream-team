@@ -19,19 +19,19 @@ export interface Market {
   resolutionTime: string;
   yesBets: number;
   noBets: number;
-  historicalBets: Bet[];
-  resolved: 'Yes' | 'No' | null;
+  resolved: 'YES' | 'NO' | null;
+  oddsHistory: { time: number, yesOdds: number }[];
+  historicalBets: { id: number; user: string; side: 'YES' | 'NO'; amount: number; time: string }[];
 }
 
 interface MarketContextType {
   markets: Market[];
-  addMarket: (market: Omit<Market, 'id' | 'yesBets' | 'noBets' | 'historicalBets' | 'resolved'>) => void;
+  addMarket: (market: Omit<Market, 'id' | 'yesBets' | 'noBets' | 'historicalBets' | 'resolved' | 'oddsHistory'>) => void;
   placeBet: (marketId: number, side: 'YES' | 'NO', amount: number) => void;
 }
 
 // --- Initial Data (using homepage mocks as a base) ---
-const initialMarkets: Market[] = [];
-
+const MOCK_MARKETS: Market[] = [];
 
 // --- Context Definition ---
 const MarketContext = createContext<MarketContextType | undefined>(undefined);
@@ -39,32 +39,36 @@ const MarketContext = createContext<MarketContextType | undefined>(undefined);
 
 // --- Provider Component ---
 export function MarketProvider({ children }: { children: ReactNode }) {
-  const [markets, setMarkets] = useState<Market[]>(initialMarkets);
+  const [markets, setMarkets] = useState<Market[]>(MOCK_MARKETS);
   const router = useRouter();
 
   useEffect(() => {
-    const resolveMarkets = () => {
-      const now = new Date();
+    const autoResolveMarket = () => {
       setMarkets(prevMarkets => {
         let marketsChanged = false;
+        const now = new Date();
         const updatedMarkets = prevMarkets.map(market => {
           if (!market.resolved && new Date(market.resolutionTime) < now) {
             marketsChanged = true;
             // In a real app, an agent would run the search query. Here, we'll randomly resolve it.
-            const randomResult: 'Yes' | 'No' = Math.random() > 0.5 ? 'Yes' : 'No';
+            const randomResult: 'YES' | 'NO' = Math.random() > 0.5 ? 'YES' : 'NO';
             return { ...market, resolved: randomResult };
           }
           return market;
         });
-        return marketsChanged ? updatedMarkets : prevMarkets;
+
+        if (marketsChanged) {
+          return updatedMarkets;
+        }
+        return prevMarkets;
       });
     };
 
-    const interval = setInterval(resolveMarkets, 10000); // Check every 10 seconds
+    const interval = setInterval(autoResolveMarket, 60 * 1000); // Check every minute
     return () => clearInterval(interval);
   }, []);
 
-  const addMarket = (market: Omit<Market, 'id' | 'yesBets' | 'noBets' | 'historicalBets' | 'resolved'>) => {
+  const addMarket = (market: Omit<Market, 'id' | 'yesBets' | 'noBets' | 'historicalBets' | 'resolved' | 'oddsHistory'>) => {
     const newMarket: Market = {
       ...market,
       id: markets.length + 1,
@@ -72,33 +76,41 @@ export function MarketProvider({ children }: { children: ReactNode }) {
       noBets: 0,
       historicalBets: [],
       resolved: null,
+      oddsHistory: [{ time: Date.now(), yesOdds: 50 }],
     };
     setMarkets(prevMarkets => [...prevMarkets, newMarket]);
     router.push('/');
   };
 
   const placeBet = (marketId: number, side: 'YES' | 'NO', amount: number) => {
-    setMarkets(prevMarkets => 
-      prevMarkets.map(market => {
+    setMarkets(prevMarkets => {
+      const newMarkets = prevMarkets.map(market => {
         if (market.id === marketId) {
-          const newBet: Bet = {
+          const newYesBets = market.yesBets + (side === 'YES' ? amount : 0);
+          const newNoBets = market.noBets + (side === 'NO' ? amount : 0);
+          const totalBets = newYesBets + newNoBets;
+          const newYesOdds = totalBets > 0 ? (newYesBets / totalBets) * 100 : 50;
+
+          const newBet = {
             id: market.historicalBets.length + 1,
-            user: '0xabc...def', // Mock user
+            user: '0xAb...89', // mock user
             side,
             amount,
             time: new Date().toLocaleTimeString()
           };
-          
+
           return {
             ...market,
-            yesBets: side === 'YES' ? market.yesBets + amount : market.yesBets,
-            noBets: side === 'NO' ? market.noBets + amount : market.noBets,
-            historicalBets: [newBet, ...market.historicalBets]
+            yesBets: newYesBets,
+            noBets: newNoBets,
+            oddsHistory: [...market.oddsHistory, { time: Date.now(), yesOdds: newYesOdds }],
+            historicalBets: [newBet, ...market.historicalBets],
           };
         }
         return market;
-      })
-    );
+      });
+      return newMarkets;
+    });
   };
 
   return (
