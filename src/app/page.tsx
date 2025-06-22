@@ -34,7 +34,7 @@ export default function HomePage() {
             {activeMarkets.map((market) => (
               <Link key={market.id} href={`/market/${market.id}`}>
                 <div className="bg-white/10 p-6 rounded-lg backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all duration-300 cursor-pointer">
-                  <h3 className="font-bold text-lg">{market.title}</h3>
+                  <h3 className="font-bold text-lg">{market.question}</h3>
                 </div>
               </Link>
             ))}
@@ -47,7 +47,7 @@ export default function HomePage() {
             {resolvedMarkets.map((market) => (
               <Link key={market.id} href={`/market/${market.id}`}>
                 <div className="bg-white/5 p-6 rounded-lg backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all duration-300 cursor-pointer opacity-70">
-                  <h3 className="font-bold text-lg">{market.title}</h3>
+                  <h3 className="font-bold text-lg">{market.question}</h3>
                   <p className="text-emerald-400 font-bold mt-2">Resolved: {market.resolved}</p>
                 </div>
               </Link>
