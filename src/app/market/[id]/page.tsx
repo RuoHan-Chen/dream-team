@@ -3,9 +3,7 @@
 import { useState } from 'react';
 import { useMarkets } from '@/context/MarketContext';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import Image from 'next/image';
 import { Clock, Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -48,8 +46,6 @@ export default function MarketDetailPage() {
   const yesOdds = totalBets > 0 ? Math.round((market.yesBets / totalBets) * 100) : 50;
   const noOdds = totalBets > 0 ? 100 - yesOdds : 50;
   const totalPoolSize = market.yesBets + market.noBets;
-
-  const inputStyles = "w-full p-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-web3-purple-light focus:outline-none transition-all duration-300 text-center";
 
   return (
     <main className="flex min-h-screen flex-col items-center p-8 md:p-24">
@@ -141,7 +137,7 @@ export default function MarketDetailPage() {
                   {selectedOutcome && (
                     <div className="mb-4">
                       <label htmlFor="bet-amount" className="block text-sm font-medium text-gray-400 mb-1">
-                        Amount ()
+                        Amount (PYUSD)
                       </label>
                       <input
                         id="bet-amount"
