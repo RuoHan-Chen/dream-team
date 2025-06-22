@@ -1,0 +1,18 @@
+# See https://docs.docker.com/engine/reference/builder/#dockerignore-file
+
+# node_modules
+node_modules
+
+# build artifacts
+.next
+next-env.d.ts
+npm-debug.log
+.DS_Store
+
+# git
+.git
+.gitignore
+
+# docker
+Dockerfile
+docker-compose.yml 
