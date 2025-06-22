@@ -31,7 +31,7 @@ app.post('/api/create-market', async (req, res) => {
       return res.status(400).json({ error: 'Missing question or deadline' })
     }
 
-    const result = await client.deployContract({
+    const txHash = await client.deployContract({
       abi,
       bytecode,
       args: [
@@ -41,8 +41,8 @@ app.post('/api/create-market', async (req, res) => {
         process.env.STABLECOIN_ADDRESS
       ]
     })
-
-    res.json({ status: 'success', contractAddress: result.contractAddress })
+    // this is the hash of the transaction, need to get the contract address from a rpc call
+    res.json({ status: 'pending', transactionHash: txHash })
   } catch (err) {
     console.error('Deployment error:', err)
     res.status(500).json({ status: 'error', error: err.message })
