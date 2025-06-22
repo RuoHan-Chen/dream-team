@@ -30,7 +30,7 @@ export function ConnectWallet() {
       {authenticated && user?.wallet ? (
         <div className="flex items-center gap-4">
           <div>
-            <p className="text-sm font-semibold text-cyan-400">{walletDisplayName}</p>
+            <p className="text-sm font-semibold text-white">{walletDisplayName}</p>
             <p className="text-sm hidden md:block">
               {user.wallet.address.slice(0, 6)}...{user.wallet.address.slice(-4)}
             </p>
