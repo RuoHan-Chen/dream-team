@@ -70,31 +70,6 @@ export default function MarketDetailPage() {
   return (
     <main className="flex min-h-screen flex-col items-center p-8 md:p-24">
       <div className="w-full max-w-6xl">
-        <header className="flex flex-wrap justify-between items-center mb-12 gap-4">
-          <Link href="/" className="block hover:scale-105 transition-transform duration-200">
-            <Image
-              src="/logo.png"
-              alt="Dream Market Logo"
-              width={200}
-              height={60}
-              className="h-16 md:h-24 w-auto"
-              priority
-            />
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/" className="bg-white/10 backdrop-blur-sm border border-white/20 text-white font-bold py-2 px-4 rounded-lg hover:bg-white/20 hover:scale-105 transition-all duration-300 text-center shadow-lg hover:shadow-xl">
-              Home
-            </Link>
-            <Link href="/active" className="bg-white/10 backdrop-blur-sm border border-white/20 text-white font-bold py-2 px-4 rounded-lg hover:bg-white/20 hover:scale-105 transition-all duration-300 text-center shadow-lg hover:shadow-xl">
-              Active Markets
-            </Link>
-            <Link href="/create" className="bg-white/10 backdrop-blur-sm border border-white/20 text-white font-bold py-2 px-4 rounded-lg hover:bg-white/20 hover:scale-105 transition-all duration-300 text-center shadow-lg hover:shadow-xl">
-              Create Market
-            </Link>
-            <ConnectWallet />
-          </div>
-        </header>
-
         <div className="bg-white/10 p-6 md:p-8 rounded-2xl backdrop-blur-sm border border-white/20 shadow-lg">
           <button onClick={() => router.back()} className="mb-6 text-sm text-gray-300 hover:text-white transition-colors">
             &larr; Back to markets
@@ -201,43 +176,37 @@ export default function MarketDetailPage() {
                           value={betAmount}
                           onChange={(e) => setBetAmount(e.target.value)}
                           placeholder="0.00"
+                          min="0.01"
+                          step="0.01"
                           disabled={isConfirming}
-                          className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition backdrop-blur-sm disabled:opacity-50"
                         />
                       </div>
                     )}
 
-                    {isConfirming && (
-                      <div className="mb-4 p-4 bg-white/5 rounded-lg backdrop-blur-sm border border-white/10">
-                        <p className="text-sm text-gray-200 mb-2">Confirm your bet:</p>
-                        <p className="text-lg font-bold text-white">
-                          {selectedOutcome} - ${betAmount}
-                        </p>
+                    {selectedOutcome && betAmount && (
+                      <div className="mb-6">
+                        <button
+                          onClick={handlePlaceBet}
+                          disabled={isConfirming}
+                          className={`w-full font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl ${
+                            isConfirming 
+                              ? 'bg-blue-600 text-white' 
+                              : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
+                          }`}
+                        >
+                          {isConfirming ? 'Confirm' : 'Submit Bet'}
+                        </button>
+                        {isConfirming && (
+                          <button
+                            onClick={handleCancelBet}
+                            className="w-full mt-2 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300"
+                          >
+                            Cancel
+                          </button>
+                        )}
                       </div>
                     )}
-
-                    <div className="flex gap-3">
-                      <button
-                        onClick={handlePlaceBet}
-                        disabled={!selectedOutcome || !betAmount}
-                        className={`flex-1 font-bold py-3 px-4 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl ${
-                          isConfirming 
-                            ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white' 
-                            : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
-                        } disabled:bg-gray-700 disabled:cursor-not-allowed`}
-                      >
-                        {isConfirming ? 'Confirm' : 'Submit Bet'}
-                      </button>
-                      
-                      {isConfirming && (
-                        <button
-                          onClick={handleCancelBet}
-                          className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </div>
                   </>
                 )}
               </div>

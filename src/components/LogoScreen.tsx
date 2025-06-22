@@ -42,7 +42,7 @@ export function LogoScreen({ onComplete, children }: LogoScreenProps) {
     };
   }, []);
 
-  const minSwipeDistance = 50;
+  const minSwipeDistance = 20; // Reduced from 50 to 20 for more sensitivity
   const maxSlideDistance = 1000; // Increased to ensure it goes completely off screen
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -59,8 +59,8 @@ export function LogoScreen({ onComplete, children }: LogoScreenProps) {
     if (touchStartY > 0) {
       const distance = touchStartY - currentY;
       if (distance > 0) {
-        // Use a smoother easing function for the slide distance
-        const easedDistance = Math.min(distance * 0.8, maxSlideDistance);
+        // More responsive sliding - less easing for immediate feedback
+        const easedDistance = Math.min(distance * 0.9, maxSlideDistance);
         setSlideDistance(easedDistance);
       }
     }
@@ -83,14 +83,14 @@ export function LogoScreen({ onComplete, children }: LogoScreenProps) {
         setTimeout(() => {
           onComplete();
         }, 100);
-      }, 800);
+      }, 600); // Reduced from 800ms for faster response
     } else {
       // Reset if swipe wasn't strong enough
       setIsSliding(true);
       setSlideDistance(0);
       setTimeout(() => {
         setIsSliding(false);
-      }, 300);
+      }, 200); // Reduced from 300ms for faster reset
     }
   };
 
@@ -115,8 +115,8 @@ export function LogoScreen({ onComplete, children }: LogoScreenProps) {
       if (mouseStartY > 0) {
         const distance = mouseStartY - currentY;
         if (distance > 0) {
-          // Use a smoother easing function for the slide distance
-          const easedDistance = Math.min(distance * 0.8, maxSlideDistance);
+          // More responsive sliding - less easing for immediate feedback
+          const easedDistance = Math.min(distance * 0.9, maxSlideDistance);
           setSlideDistance(easedDistance);
         }
       }
@@ -143,16 +143,36 @@ export function LogoScreen({ onComplete, children }: LogoScreenProps) {
         setTimeout(() => {
           onComplete();
         }, 100);
-      }, 800);
+      }, 600); // Reduced from 800ms for faster response
     } else {
       // Reset if swipe wasn't strong enough
       setIsSliding(true);
       setSlideDistance(0);
       setTimeout(() => {
         setIsSliding(false);
-      }, 300);
+      }, 200); // Reduced from 300ms for faster reset
     }
   };
+
+  // Add keyboard support for accessibility
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        setIsSliding(true);
+        setSlideDistance(maxSlideDistance);
+        setTimeout(() => {
+          setShouldUnmount(true);
+          setTimeout(() => {
+            onComplete();
+          }, 100);
+        }, 600);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onComplete, maxSlideDistance]);
 
   // Don't render if should unmount
   if (shouldUnmount) {
@@ -168,7 +188,7 @@ export function LogoScreen({ onComplete, children }: LogoScreenProps) {
       
       {/* Logo screen overlay */}
       <div 
-        className="fixed inset-0 bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 flex flex-col items-center justify-center z-50 select-none"
+        className="fixed inset-0 bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 flex flex-col items-center justify-center z-50 select-none cursor-pointer"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -176,9 +196,20 @@ export function LogoScreen({ onComplete, children }: LogoScreenProps) {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={() => setIsMouseDown(false)}
+        onClick={() => {
+          // Also allow clicking anywhere to proceed
+          setIsSliding(true);
+          setSlideDistance(maxSlideDistance);
+          setTimeout(() => {
+            setShouldUnmount(true);
+            setTimeout(() => {
+              onComplete();
+            }, 100);
+          }, 600);
+        }}
         style={{
           transform: `translateY(-${slideDistance}px)`,
-          transition: isSliding ? 'transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
+          transition: isSliding ? 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
         }}
       >
         {/* Logo */}
@@ -233,6 +264,7 @@ export function LogoScreen({ onComplete, children }: LogoScreenProps) {
               </svg>
             </div>
             <p className="text-lg font-medium">Swipe up to enter</p>
+            <p className="text-sm text-blue-200 mt-1">Or click anywhere</p>
           </div>
         </div>
 
@@ -245,4 +277,4 @@ export function LogoScreen({ onComplete, children }: LogoScreenProps) {
       </div>
     </>
   );
-} 
+}
