@@ -21,6 +21,9 @@ export default function HomePage() {
             <Link href="/create" className="bg-web3-purple/80 border border-web3-purple-light text-white font-bold py-2 px-4 rounded-lg hover:bg-web3-purple transition-colors duration-300 text-center">
               Create Market
             </Link>
+            <Link href="/protected" className="bg-web3-purple/80 border border-web3-purple-light text-white font-bold py-2 px-4 rounded-lg hover:bg-web3-purple transition-colors duration-300 text-center">
+              Protected Site
+            </Link>
             <ConnectWallet />
           </div>
         </header>
