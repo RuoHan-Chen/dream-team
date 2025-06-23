@@ -23,7 +23,7 @@ console.log("Loaded private key (masked):", privateKey.slice(0, 6) + "..." + pri
 const account = privateKeyToAccount(privateKey)
 const client = createWalletClient({
   account,
-  chain: require('viem/chains').sepolia,
+  chain: require('viem/chains').flowTestnet,
   transport: http()
 })
 
