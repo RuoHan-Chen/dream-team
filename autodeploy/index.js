@@ -6,6 +6,11 @@ const { abi, bytecode } = require('./BooleanPredictionEscrow.json')
 
 const app = express()
 const port = 4200
+const cors = require('cors')
+
+app.use(cors({
+  origin: 'http://localhost:3000'
+}))
 
 // Load and validate private key
 const rawPrivateKey = process.env.DEPLOYER_PRIVATE_KEY
@@ -41,7 +46,6 @@ app.post('/api/create-market', async (req, res) => {
         process.env.STABLECOIN_ADDRESS
       ]
     })
-    // this is the hash of the transaction, need to get the contract address from a rpc call
     res.json({ status: 'pending', transactionHash: txHash })
   } catch (err) {
     console.error('Deployment error:', err)

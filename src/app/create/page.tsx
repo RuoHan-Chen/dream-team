@@ -12,18 +12,79 @@ export default function CreateMarketPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [ends, setEnds] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!question || !ends || !searchQuery) {
       alert('Please fill out all fields.');
       return;
     }
-    addMarket({
-      question,
-      searchQuery,
-      ends: new Date(ends).getTime(),
-    });
-    router.push('/active');
+
+    try {
+      // Step 1: Call autodeploy API to get transaction hash
+      const deployResponse = await fetch('http://localhost:4200/api/create-market', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question,
+          deadline: Math.floor(new Date(ends).getTime() / 1000),
+        }),
+      });
+
+      const deployResult = await deployResponse.json();
+
+      if (deployResult.status !== 'pending') {
+        throw new Error(deployResult.error || 'Deployment failed');
+      }
+
+      const txHash = deployResult.transactionHash;
+      console.log('Deployment transaction hash:', txHash);
+      const rpcUrl = 'https://sepolia.infura.io/v3/' + process.env.NEXT_PUBLIC_INFURA_API_KEY;
+      // Step 2: Wait a bit for transaction to be mined, then get contract address
+      setTimeout(async () => {
+        try {
+          const contractResponse = await fetch('/api/get-contract', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              txHash: txHash,
+              rpcUrl: rpcUrl,
+            }),
+          });
+
+          const contractResult = await contractResponse.json();
+
+          if (contractResult.status === 'success') {
+            const contractAddress = contractResult.contractAddress;
+            console.log('Contract deployed at:', contractAddress);
+
+            // Step 3: Add market with contract address
+            addMarket({
+              question,
+              searchQuery,
+              ends: new Date(ends).getTime(),
+              contractAddress: contractAddress,
+            });
+            router.push('/active');
+          } else {
+            throw new Error(contractResult.error || 'Failed to get contract address');
+          }
+        } catch (contractError) {
+          console.error('Error getting contract address:', contractError);
+          alert('Market created but could not retrieve contract address. Please check the transaction manually.');
+          // Still add the market without address
+          addMarket({
+            question,
+            searchQuery,
+            ends: new Date(ends).getTime(),
+          });
+          router.push('/active');
+        }
+      }, 10000); // Wait 5 seconds for transaction to be mined
+
+    } catch (error) {
+      console.error('Deployment error:', error);
+      alert(`Error creating market: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   return (

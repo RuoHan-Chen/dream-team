@@ -94,8 +94,9 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({ children }) => {
   const addMarket = useCallback(
     async (marketData: Omit<Market, 'id' | 'poolSize' | 'yesBets' | 'noBets' | 'resolved' | 'historicalBets' | 'oddsHistory'>) => {
       try {
-        // For now, we'll create a mock market without deploying a contract
-        // In a real implementation, you would deploy the contract here
+        // Use the contractAddress from marketData if provided, otherwise create a mock one
+        const contractAddress = marketData.contractAddress || (`0xMockContract${markets.length + 1}` as `0x${string}`);
+        
         const newMarket: Market = {
           ...marketData,
           id: markets.length + 1,
@@ -105,7 +106,7 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({ children }) => {
           resolved: null,
           historicalBets: [],
           oddsHistory: [],
-          contractAddress: (`0xMockContract${markets.length + 1}` as `0x${string}`), // Mock address
+          contractAddress: contractAddress,
         };
         setMarkets((prevMarkets) => [...prevMarkets, newMarket]);
         router.push('/');
