@@ -9,7 +9,11 @@ import dynamic from 'next/dynamic';
 import { Clock, Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ConnectWallet } from '@/components/ConnectWallet';
-
+import { erc20Abi, escrowAbi } from '@/app/util/abi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { waitForTransactionReceipt, readContract } from '@wagmi/core'
+import { config } from '@/app/util/config';
+import axios from 'axios';
 const MarketChart = dynamic(() => import('@/components/MarketChart').then(mod => mod.MarketChart), {
   loading: () => <p className="text-center text-white/50">Loading chart...</p>,
   ssr: false
@@ -20,7 +24,8 @@ export default function MarketDetailPage() {
   const params = useParams();
   const marketId = parseInt(params.id as string, 10);
   const router = useRouter();
-  
+  const { address } = useAccount();
+
   const market = markets.find(m => m.id === marketId);
   const [betAmount, setBetAmount] = useState('');
   const [selectedOutcome, setSelectedOutcome] = useState<'YES' | 'NO' | null>(null);
@@ -67,6 +72,61 @@ export default function MarketDetailPage() {
   const noOdds = totalBets > 0 ? 100 - yesOdds : 50;
   const totalPoolSize = market.yesBets + market.noBets;
 
+  // New async confirm handler
+// inside your component, after hooking up useWriteContract:
+const { writeContractAsync: writeApprove } = useWriteContract();
+const { writeContractAsync: writePlaceBet } = useWriteContract();
+
+// New async confirm handler
+const handleConfirm = async () => {
+  console.log("1");
+  if (!selectedOutcome || !betAmount) return;
+  console.log("2");
+
+  try {
+    setIsConfirming(true);
+    const hashApprove = await writeApprove({
+      abi: erc20Abi,
+      address: "0xCaC524BcA292aaade2DF8A05cC58F0a65B1B3bB9",
+      functionName: "approve",
+      args: [
+        market.contractAddress as `0x${string}`,
+        BigInt(Math.ceil(Number(betAmount)*1000000)),
+      ],
+    });
+    const transactionReceipt = await waitForTransactionReceipt(config, {
+      hash: hashApprove,
+    })
+    console.log("hash1:", hashApprove)
+    if(transactionReceipt.status == "success"){
+      const hashFund = await writePlaceBet({
+          abi: escrowAbi,
+          address: market.contractAddress as `0x${string}`,
+          functionName: "placeBet",
+          args: [
+            selectedOutcome === 'YES' ? true : false as boolean,
+            BigInt(Math.ceil(Number(betAmount))*1000000),
+          ],
+        });
+        const transactionReceiptFund = await waitForTransactionReceipt(config, {
+          hash: hashFund,
+        })
+        if(transactionReceiptFund.status == "success"){
+          console.log('Transaction confirmed:', transactionReceiptFund.transactionHash);
+          placeBet(market.id, selectedOutcome, parseFloat(betAmount));
+          // post to db
+        }
+      }
+    setBetAmount('');
+    setSelectedOutcome(null);
+  } catch (error) {
+    console.error('Error confirming bet:', error);
+  } finally {
+    setIsConfirming(false);
+  }
+};
+
+
   return (
     <main className="flex min-h-screen flex-col items-center p-8 md:p-24">
       <div className="w-full max-w-6xl">
@@ -87,7 +147,7 @@ export default function MarketDetailPage() {
                 <Info size={16} className="mr-2" />
                 <span>Resolves via: </span>
                 <a 
-                  href={`https://www.google.com/search?q=${encodeURIComponent(market.searchQuery)}`}
+                  href={`${encodeURIComponent(market.searchQuery)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-400 hover:text-blue-300 underline ml-1"
@@ -211,7 +271,7 @@ export default function MarketDetailPage() {
                     {selectedOutcome && betAmount && (
                       <div className="mb-6">
                         <button
-                          onClick={handlePlaceBet}
+                          onClick={isConfirming ? handlePlaceBet : handleConfirm}
                           disabled={isConfirming}
                           className={`w-full font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl ${
                             isConfirming 
