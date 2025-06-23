@@ -17,7 +17,15 @@ export async function POST(req) {
     const receipt = await client.getTransactionReceipt({ hash: txHash })
 
     if (!receipt.contractAddress) {
-      return Response.json({ status: 'error', error: 'No contractAddress found — was this a contract deployment?' }, { status: 400 })
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const receipt2 = await client.getTransactionReceipt({ hash: txHash })
+      if (!receipt2.contractAddress) {
+        return Response.json({ status: 'error', error: 'No contractAddress found — was this a contract deployment?' }, { status: 400 })
+      }
+      return Response.json({
+        status: 'success',
+        contractAddress: receipt2.contractAddress
+      })
     }
 
     return Response.json({
