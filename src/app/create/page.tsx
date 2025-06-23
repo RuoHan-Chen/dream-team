@@ -2,10 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useMarkets } from '@/context/MarketContext';
 import { useRouter } from 'next/navigation';
-import { ConnectWallet } from '@/components/ConnectWallet';
 
 export default function CreateMarketPage() {
   const { addMarket } = useMarkets();
@@ -92,31 +90,6 @@ export default function CreateMarketPage() {
   return (
     <main className="flex min-h-screen flex-col items-center p-8 md:p-24">
       <div className="w-full max-w-5xl">
-        <header className="flex flex-wrap justify-between items-center mb-12 gap-4">
-          <Link href="/" className="block hover:scale-105 transition-transform duration-200">
-            <Image
-              src="/logo.png"
-              alt="Dream Market Logo"
-              width={200}
-              height={60}
-              className="h-16 md:h-24 w-auto"
-              priority
-            />
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/" className="bg-white/10 backdrop-blur-sm border border-white/20 text-white font-bold py-2 px-4 rounded-lg hover:bg-white/20 hover:scale-105 transition-all duration-300 text-center shadow-lg hover:shadow-xl">
-              Home
-            </Link>
-            <Link href="/active" className="bg-white/10 backdrop-blur-sm border border-white/20 text-white font-bold py-2 px-4 rounded-lg hover:bg-white/20 hover:scale-105 transition-all duration-300 text-center shadow-lg hover:shadow-xl">
-              Active Markets
-            </Link>
-            <Link href="/resolved" className="bg-white/10 backdrop-blur-sm border border-white/20 text-white font-bold py-2 px-4 rounded-lg hover:bg-white/20 hover:scale-105 transition-all duration-300 text-center shadow-lg hover:shadow-xl">
-              Resolved Markets
-            </Link>
-            <ConnectWallet />
-          </div>
-        </header>
-
         <div className="flex justify-center">
           <div className="w-full max-w-2xl">
             <div className="bg-white/10 p-8 rounded-2xl backdrop-blur-sm border border-white/20 shadow-lg">

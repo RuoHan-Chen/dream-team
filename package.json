@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@coinbase/onchainkit": "^0.38.14",
+    "@coinbase/x402": "^0.4.1",
     "@privy-io/react-auth": "^2.16.0",
     "@privy-io/wagmi": "^1.0.4",
     "@tanstack/react-query": "^5.81.2",
@@ -23,12 +25,14 @@
     "lucide-react": "^0.522.0",
     "mime-db": "^1.54.0",
     "mime-types": "^3.0.1",
-    "next": "15.3.4",
+    "next": "^15.4.0-canary.91",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.4",
     "viem": "^2.31.4",
-    "wagmi": "^2.15.6"
+    "wagmi": "^2.15.6",
+    "x402-axios": "^0.4.1",
+    "x402-next": "^0.4.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
