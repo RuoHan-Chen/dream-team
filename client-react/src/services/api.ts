@@ -1,7 +1,5 @@
 import axios from "axios";
 import type { AxiosInstance } from "axios";
-import type { WalletClient } from "viem";
-import { withPaymentInterceptor } from "x402-axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
@@ -16,36 +14,10 @@ const baseApiClient = axios.create({
 // This will be dynamically set based on wallet connection
 let apiClient: AxiosInstance = baseApiClient;
 
-// Update the API client with a wallet and auth token
-export function updateApiClient(walletClient: WalletClient | null, authToken: string | null) {
-  if (walletClient && walletClient.account && authToken) {
+// Update the API client with an auth token
+export function updateApiClient(authToken: string | null) {
+  if (authToken) {
     // Create new base client with auth token
-    const authClient = axios.create({
-      baseURL: API_BASE_URL,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${authToken}`,
-      },
-    });
-
-    // Add x402 payment interceptor
-    apiClient = withPaymentInterceptor(authClient, walletClient as any);
-
-    // Fix x402-axios bug: remove the incorrectly added request header
-    apiClient.interceptors.request.use(
-      (config) => {
-        // Remove the header that x402-axios incorrectly adds
-        if (config.headers && 'Access-Control-Expose-Headers' in config.headers) {
-          delete config.headers['Access-Control-Expose-Headers'];
-        }
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
-
-    console.log("💳 API client updated with wallet:", walletClient.account.address);
-  } else if (authToken) {
-    // Just auth, no wallet
     apiClient = axios.create({
       baseURL: API_BASE_URL,
       headers: {
@@ -53,11 +25,11 @@ export function updateApiClient(walletClient: WalletClient | null, authToken: st
         "Authorization": `Bearer ${authToken}`,
       },
     });
-    console.log("🔐 API client updated with auth token only");
+    console.log("🔐 API client updated with auth token");
   } else {
-    // No wallet or auth connected - reset to base client
+    // No auth connected - reset to base client
     apiClient = baseApiClient;
-    console.log("⚠️ API client reset - no wallet or auth");
+    console.log("⚠️ API client reset - no auth");
   }
 }
 

@@ -1,51 +1,26 @@
 import React from 'react';
-import { useWallet } from '../contexts/WalletContext';
+import { usePrivy } from '@privy-io/react-auth';
 
 export function WalletConnect() {
-  const { isConnected, address, isConnecting, error, connectWallet, disconnectWallet, authenticate, authToken } = useWallet();
+  const { ready, authenticated, user, login, logout } = usePrivy();
 
-  const formatAddress = (addr: string) => {
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-  };
+  if (!ready) {
+    return <button disabled className="connect-btn">Loading Privy...</button>;
+  }
 
-  if (isConnected && address) {
-    return (
-      <div className="wallet-connected">
-        <div className="wallet-info">
-          <span className="status-indicator">●</span>
-          <span className="address">{formatAddress(address)}</span>
-          <button onClick={disconnectWallet} className="disconnect-btn">
-            Disconnect
-          </button>
-        </div>
-        {!authToken && (
-          <div style={{ marginTop: '10px' }}>
-            <button
-              onClick={() => authenticate().catch(err => console.error('Manual auth failed:', err))}
-              className="connect-btn"
-            >
-              Authenticate Manually
-            </button>
-          </div>
-        )}
-      </div>
-    );
+  if (!authenticated) {
+    return <button onClick={login} className="connect-btn">Connect Wallet</button>;
   }
 
   return (
-    <div className="wallet-connect">
-      <button
-        onClick={connectWallet}
-        disabled={isConnecting}
-        className="connect-btn"
-      >
-        {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+    <div className="wallet-connected">
+      <div className="wallet-info">
+        <span className="status-indicator">●</span>
+        <span className="address">{user?.wallet?.address}</span>
+      </div>
+      <button onClick={logout} className="disconnect-btn">
+        Logout
       </button>
-      {error && (
-        <div className="error-message">
-          {error}
-        </div>
-      )}
     </div>
   );
 } 
