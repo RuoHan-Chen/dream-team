@@ -1,26 +1,36 @@
 import React from 'react';
-import { usePrivy } from '@privy-io/react-auth';
+import { useWallet } from '../contexts/WalletContext';
 
-export function WalletConnect() {
-  const { ready, authenticated, user, login, logout } = usePrivy();
+export const WalletConnect: React.FC = () => {
+  const { address, isConnected, connect, disconnect } = useWallet();
 
-  if (!ready) {
-    return <button disabled className="connect-btn">Loading Privy...</button>;
-  }
+  const handleConnect = async () => {
+    try {
+      await connect();
+    } catch (error: any) {
+      console.error('Failed to connect:', error);
+      alert(error.message || 'Failed to connect wallet');
+    }
+  };
 
-  if (!authenticated) {
-    return <button onClick={login} className="connect-btn">Connect Wallet</button>;
+  const formatAddress = (addr: string) => {
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  };
+
+  if (isConnected) {
+    return (
+      <div className="wallet-info">
+        <span className="wallet-address">{formatAddress(address!)}</span>
+        <button onClick={disconnect} className="disconnect-btn">
+          Disconnect
+        </button>
+      </div>
+    );
   }
 
   return (
-    <div className="wallet-connected">
-      <div className="wallet-info">
-        <span className="status-indicator">●</span>
-        <span className="address">{user?.wallet?.address}</span>
-      </div>
-      <button onClick={logout} className="disconnect-btn">
-        Logout
-      </button>
-    </div>
+    <button onClick={handleConnect} className="connect-btn">
+      Connect Wallet
+    </button>
   );
-} 
+}; 

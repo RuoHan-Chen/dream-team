@@ -1,5 +1,7 @@
 import axios from "axios";
 import type { AxiosInstance } from "axios";
+import type { WalletClient } from "viem";
+import { withPaymentInterceptor } from "x402-axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
@@ -14,22 +16,37 @@ const baseApiClient = axios.create({
 // This will be dynamically set based on wallet connection
 let apiClient: AxiosInstance = baseApiClient;
 
-// Update the API client with an auth token
-export function updateApiClient(authToken: string | null) {
-  if (authToken) {
-    // Create new base client with auth token
-    apiClient = axios.create({
+// Update the API client with a wallet
+export function updateApiClient(walletClient: WalletClient | null) {
+  if (walletClient && walletClient.account) {
+    // Create new base client
+    const client = axios.create({
       baseURL: API_BASE_URL,
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${authToken}`,
       },
     });
-    console.log("🔐 API client updated with auth token");
+
+    // Add x402 payment interceptor
+    apiClient = withPaymentInterceptor(client, walletClient as any);
+
+    // Fix x402-axios bug: remove the incorrectly added request header
+    apiClient.interceptors.request.use(
+      (config) => {
+        // Remove the header that x402-axios incorrectly adds
+        if (config.headers && 'Access-Control-Expose-Headers' in config.headers) {
+          delete config.headers['Access-Control-Expose-Headers'];
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    console.log("💳 API client updated with wallet:", walletClient.account.address);
   } else {
-    // No auth connected - reset to base client
+    // No wallet connected - reset to base client
     apiClient = baseApiClient;
-    console.log("⚠️ API client reset - no auth");
+    console.log("⚠️ API client reset - no wallet");
   }
 }
 
@@ -89,6 +106,7 @@ export interface MarketCreationResponse {
   transactionHash: string;
   message: string;
   pricePaid: string;
+  creatorAddress: string;
 }
 
 export interface MarketStatus {
@@ -102,6 +120,34 @@ export interface MarketStatus {
   summary: string | null;
   sources: SearchProviderResult[] | null;
   error: string | null;
+  // Agent resolution data
+  agentResolved?: boolean;
+  agentOutcome?: boolean;
+  agentResolutionTx?: string;
+  agentResolvedAt?: string;
+  agentAnalysis?: string;
+}
+
+export interface MarketListItem {
+  contractAddress: string;
+  marketQuestion: string;
+  creatorAddress: string;
+  createdAt: string;
+  queryId: number;
+  searchQuery: string;
+  scheduledFor: string;
+  executedAt: string | null;
+  status: string;
+  summary: string | null;
+  sources: SearchProviderResult[] | null;
+  error: string | null;
+  isOwnMarket: boolean;
+  // Agent resolution data
+  agentResolved?: boolean;
+  agentOutcome?: boolean;
+  agentResolutionTx?: string;
+  agentResolvedAt?: string;
+  agentAnalysis?: string;
 }
 
 // API endpoints
@@ -166,6 +212,12 @@ export const api = {
   getMarketStatus: async (contractAddress: string): Promise<MarketStatus> => {
     console.log("📊 Getting market status:", contractAddress);
     const response = await apiClient.get(`/api/markets/${contractAddress}`);
+    return response.data;
+  },
+
+  getAllMarkets: async (): Promise<{ markets: MarketListItem[] }> => {
+    console.log("📋 Getting all markets");
+    const response = await apiClient.get("/api/markets");
     return response.data;
   },
 }; 

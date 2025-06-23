@@ -64,7 +64,6 @@ contract BooleanPredictionEscrow {
     }
 
     function placeBet(bool prediction, uint256 amount) external inState(MarketState.Open) {
-        require(block.timestamp < deadline, "Betting closed");
         require(amount > 1, "Amount must be > 1");
         require(!bets[msg.sender].hasBet, "Already bet");
 
@@ -90,14 +89,25 @@ contract BooleanPredictionEscrow {
 
         uint256 winningPool = outcome ? totalTrue : totalFalse;
 
-        for (uint256 i = 0; i < participants.length; i++) {
-            address user = participants[i];
-            Bet storage b = bets[user];
-            if (!b.paidOut && b.prediction == outcome) {
-                uint256 payout = (b.amount * totalPool) / winningPool;
-                b.paidOut = true;
-                require(stablecoin.transfer(user, payout), "Payout failed");
-                emit RewardDistributed(user, payout);
+        if (winningPool == 0) {
+            for (uint256 i = 0; i < participants.length; i++) {
+                address user = participants[i];
+                Bet storage b = bets[user];
+                if (!b.paidOut) {
+                    b.paidOut = true;
+                    require(stablecoin.transfer(user, b.amount), "Refund failed");
+                }
+            }
+        } else {
+            for (uint256 i = 0; i < participants.length; i++) {
+                address user = participants[i];
+                Bet storage b = bets[user];
+                if (!b.paidOut && b.prediction == outcome) {
+                    uint256 payout = (b.amount * totalPool) / winningPool;
+                    b.paidOut = true;
+                    require(stablecoin.transfer(user, payout), "Payout failed");
+                    emit RewardDistributed(user, payout);
+                }
             }
         }
     }

@@ -76,6 +76,7 @@ db.serialize(() => {
       market_contract_address TEXT PRIMARY KEY,
       query_id INTEGER NOT NULL,
       market_question TEXT NOT NULL,
+      creator_address TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (query_id) REFERENCES queries(id)
     );
@@ -150,6 +151,91 @@ function runMigrations() {
       });
     }
   });
+
+  // Migration 2: Add creator_address column to market_queries table
+  db.get('SELECT name FROM migrations WHERE name = ?', ['add_creator_address_column'], (err, row) => {
+    if (err) {
+      console.error('Error checking migrations:', err);
+      return;
+    }
+
+    if (!row) {
+      // Check if column already exists
+      db.all("PRAGMA table_info(market_queries)", (err, columns) => {
+        if (err) {
+          console.error('Error getting table columns:', err);
+          return;
+        }
+
+        const hasCreatorAddressColumn = columns.some((col: any) => col.name === 'creator_address');
+        
+        if (!hasCreatorAddressColumn) {
+          console.log('Running migration: add_creator_address_column');
+          // Add column with a default value for existing rows
+          db.run('ALTER TABLE market_queries ADD COLUMN creator_address TEXT NOT NULL DEFAULT "0xUNKNOWN"', (err) => {
+            if (err) {
+              console.error('Error adding creator_address column:', err);
+              return;
+            }
+
+            // Record the migration
+            db.run('INSERT INTO migrations (name) VALUES (?)', ['add_creator_address_column'], (err) => {
+              if (err) {
+                console.error('Error recording migration:', err);
+              } else {
+                console.log('Migration add_creator_address_column completed successfully');
+              }
+            });
+          });
+        } else {
+          // Column exists, just record the migration if not already recorded
+          db.run('INSERT OR IGNORE INTO migrations (name) VALUES (?)', ['add_creator_address_column']);
+        }
+      });
+    }
+  });
+
+  // Migration 3: Add agent resolution columns to market_queries table
+  db.get('SELECT name FROM migrations WHERE name = ?', ['add_agent_resolution_columns'], (err, row) => {
+    if (err) {
+      console.error('Error checking migrations:', err);
+      return;
+    }
+
+    if (!row) {
+      console.log('Running migration: add_agent_resolution_columns');
+      
+      // Add columns for storing agent resolution data
+      const alterTableQueries = [
+        'ALTER TABLE market_queries ADD COLUMN agent_resolved BOOLEAN DEFAULT FALSE',
+        'ALTER TABLE market_queries ADD COLUMN agent_outcome BOOLEAN',
+        'ALTER TABLE market_queries ADD COLUMN agent_resolution_tx TEXT',
+        'ALTER TABLE market_queries ADD COLUMN agent_resolved_at DATETIME',
+        'ALTER TABLE market_queries ADD COLUMN agent_analysis TEXT'
+      ];
+
+      let completed = 0;
+      alterTableQueries.forEach(query => {
+        db.run(query, (err) => {
+          if (err && !err.message.includes('duplicate column name')) {
+            console.error('Error in migration:', err);
+          }
+          completed++;
+          
+          if (completed === alterTableQueries.length) {
+            // Record the migration
+            db.run('INSERT OR IGNORE INTO migrations (name) VALUES (?)', ['add_agent_resolution_columns'], (err) => {
+              if (err) {
+                console.error('Error recording migration:', err);
+              } else {
+                console.log('Migration add_agent_resolution_columns completed successfully');
+              }
+            });
+          }
+        });
+      });
+    }
+  });
 }
 
 // SQL statements
@@ -203,8 +289,8 @@ const sql = {
   deleteQuery: 'DELETE FROM queries WHERE id = ? AND user_address = ? AND status = "pending"',
 
   createMarketQuery: `
-    INSERT INTO market_queries (market_contract_address, query_id, market_question)
-    VALUES (?, ?, ?)
+    INSERT INTO market_queries (market_contract_address, query_id, market_question, creator_address)
+    VALUES (?, ?, ?, ?)
   `,
 
   getMarketByQueryId: `
@@ -213,6 +299,32 @@ const sql = {
 
   getMarketByContractAddress: `
     SELECT * FROM market_queries WHERE market_contract_address = ?
+  `,
+  
+  updateMarketResolution: `
+    UPDATE market_queries
+    SET agent_resolved = TRUE,
+        agent_outcome = ?,
+        agent_resolution_tx = ?,
+        agent_resolved_at = datetime('now'),
+        agent_analysis = ?
+    WHERE market_contract_address = ?
+  `,
+
+  getAllMarkets: `
+    SELECT 
+      mq.*,
+      q.query as search_query,
+      q.scheduled_for,
+      q.executed_at,
+      q.status,
+      r.summary,
+      r.sources,
+      r.error
+    FROM market_queries mq
+    INNER JOIN queries q ON mq.query_id = q.id
+    LEFT JOIN query_results r ON q.id = r.query_id
+    ORDER BY mq.created_at DESC
   `
 };
 
@@ -284,8 +396,8 @@ export const database = {
     return result.changes > 0;
   },
 
-  async createMarketQuery(marketContractAddress: string, queryId: number, marketQuestion: string) {
-    await dbRun(sql.createMarketQuery, marketContractAddress, queryId, marketQuestion);
+  async createMarketQuery(marketContractAddress: string, queryId: number, marketQuestion: string, creatorAddress: string) {
+    await dbRun(sql.createMarketQuery, marketContractAddress, queryId, marketQuestion, creatorAddress);
   },
 
   async getMarketByQueryId(queryId: number): Promise<any | undefined> {
@@ -294,6 +406,19 @@ export const database = {
 
   async getMarketByContractAddress(marketContractAddress: string): Promise<any | undefined> {
     return await dbGet(sql.getMarketByContractAddress, marketContractAddress) as any | undefined;
+  },
+
+  async updateMarketResolution(
+    marketContractAddress: string, 
+    outcome: boolean, 
+    txHash: string, 
+    analysis: string
+  ) {
+    await dbRun(sql.updateMarketResolution, outcome, txHash, analysis, marketContractAddress);
+  },
+
+  async getAllMarkets(): Promise<any[]> {
+    return await dbAll(sql.getAllMarkets);
   },
 
   close() {

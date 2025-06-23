@@ -1,178 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { usePrivy } from '@privy-io/react-auth';
-import { api, updateApiClient, type SearchResult, type ScheduledQuery, type QueryHistory, type MarketCreationResponse, type MarketStatus } from './services/api';
+import { WalletConnect } from './components/WalletConnect';
+import { useWallet } from './contexts/WalletContext';
+import { api, updateApiClient, type SearchResult, type SearchSource, type ScheduledQuery, type QueryHistory, type MarketCreationResponse, type MarketStatus, type MarketListItem } from './services/api';
 import './App.css';
-import logo from './logo.png';
-
-type Star = {
-  id: number;
-  style: React.CSSProperties;
-};
-
-type ShootingStar = {
-  id: number;
-  style: React.CSSProperties;
-};
-
-type PulsingStar = {
-  id: number;
-  style: React.CSSProperties;
-};
 
 function App() {
-  const { ready, authenticated, user, login, logout, getAccessToken } = usePrivy();
-  const [authToken, setAuthToken] = useState<string | null>(null);
-  
-  console.log('App component rendering...');
-  console.log('Privy state:', { ready, authenticated, user: user?.wallet?.address });
-  
+  const { walletClient, isConnected } = useWallet();
   const [activeTab, setActiveTab] = useState<'search' | 'pending' | 'history' | 'markets'>('search');
+  const [marketView, setMarketView] = useState<'browse' | 'create'>('browse');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isScheduled, setIsScheduled] = useState(false);
-  const [scheduleDate, setScheduleDate] = useState('');
-  const [scheduleEmail, setScheduleEmail] = useState('');
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
-  const [pendingQueries, setPendingQueries] = useState<ScheduledQuery[]>([]);
-  const [queryHistory, setQueryHistory] = useState<QueryHistory[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  
-  // Market creation state
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleEmail, setScheduleEmail] = useState('');
+  const [pendingQueries, setPendingQueries] = useState<ScheduledQuery[]>([]);
+  const [queryHistory, setQueryHistory] = useState<QueryHistory[]>([]);
   const [marketQuestion, setMarketQuestion] = useState('');
   const [marketSearchQuery, setMarketSearchQuery] = useState('');
   const [marketResolutionDate, setMarketResolutionDate] = useState('');
   const [createdMarket, setCreatedMarket] = useState<MarketCreationResponse | null>(null);
-  const [marketStatus, setMarketStatus] = useState<MarketStatus | null>(null);
   const [checkingContractAddress, setCheckingContractAddress] = useState('');
-  const [stars, setStars] = useState<Star[]>([]);
-  const [shootingStars, setShootingStars] = useState<ShootingStar[]>([]);
-  const [pulsingStars, setPulsingStars] = useState<PulsingStar[]>([]);
-  const [homeShootingStars, setHomeShootingStars] = useState<ShootingStar[]>([]);
-  const [showIntro, setShowIntro] = useState(true);
-  const [overlayY, setOverlayY] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [showSearchInterface, setShowSearchInterface] = useState(false);
-  const [introDismissed, setIntroDismissed] = useState(false);
-  const dragStartPos = React.useRef(0);
-
-  // Get auth token when user authenticates
-  useEffect(() => {
-    const fetchToken = async () => {
-      try {
-        const token = await getAccessToken();
-        setAuthToken(token);
-      } catch (error) {
-        console.error('Failed to get access token:', error);
-      }
-    };
-
-    if (authenticated) {
-      fetchToken();
-    }
-  }, [authenticated, getAccessToken]);
-
-  // Generate stars and pulses on component mount
-  useEffect(() => {
-    const generateStars = () => {
-      const newStars: Star[] = [];
-      const numStars = 100;
-      for (let i = 0; i < numStars; i++) {
-        const size = Math.random() * 2 + 1;
-        const top = Math.random() * 100;
-        const left = Math.random() * 100;
-        const animationDuration = Math.random() * 3 + 2;
-        const animationDelay = Math.random() * 5;
-
-        newStars.push({
-          id: i,
-          style: {
-            width: `${size}px`,
-            height: `${size}px`,
-            top: `${top}%`,
-            left: `${left}%`,
-            animationDuration: `${animationDuration}s`,
-            animationDelay: `${animationDelay}s`,
-          },
-        });
-      }
-      setStars(newStars);
-    };
-
-    const generateShootingStars = () => {
-      const newShootingStars: ShootingStar[] = [];
-      const numShootingStars = 12; // Increased number for more individual stars
-      for (let i = 0; i < numShootingStars; i++) {
-        const startX = Math.random() * 600; // Start from anywhere across the screen (0-600px)
-        const startY = Math.random() * 200; // Start from top side (0-200px) - wider area
-        const animationDuration = Math.random() * 3 + 5; // Faster animation (5-8s)
-        const animationDelay = Math.random() * 4 + 0.2; // Spread out delays (0.2-4.2s) for more individual timing
-
-        newShootingStars.push({
-          id: i,
-          style: {
-            top: `${startY}px`,
-            left: `${startX}px`,
-            animationDuration: `${animationDuration}s`,
-            animationDelay: `${animationDelay}s`,
-          } as React.CSSProperties,
-        });
-      }
-      setShootingStars(newShootingStars);
-    };
-
-    const generatePulsingStars = () => {
-      const newPulsingStars: PulsingStar[] = [];
-      const numPulsingStars = 25;
-      for (let i = 0; i < numPulsingStars; i++) {
-        const size = Math.random() * 2 + 1; // Smaller size range (1-3px)
-        const top = Math.random() * 100;
-        const left = Math.random() * 100;
-        const animationDuration = Math.random() * 4 + 3;
-        const animationDelay = Math.random() * 6;
-
-        newPulsingStars.push({
-          id: i,
-          style: {
-            width: `${size}px`,
-            height: `${size}px`,
-            top: `${top}%`,
-            left: `${left}%`,
-            animationDuration: `${animationDuration}s`,
-            animationDelay: `${animationDelay}s`,
-          },
-        });
-      }
-      setPulsingStars(newPulsingStars);
-    };
-
-    const generateHomeShootingStars = () => {
-      const newHomeShootingStars: ShootingStar[] = [];
-      const numHomeShootingStars = 8; // Fewer stars for home page
-      for (let i = 0; i < numHomeShootingStars; i++) {
-        const startX = Math.random() * 800; // Wider range for home page
-        const startY = Math.random() * 300; // Start from top area
-        const animationDuration = Math.random() * 4 + 6; // Slower animation (6-10s)
-        const animationDelay = Math.random() * 8 + 2; // Longer delays (2-10s) for more sporadic appearance
-
-        newHomeShootingStars.push({
-          id: i + 1000, // Different ID range to avoid conflicts
-          style: {
-            top: `${startY}px`,
-            left: `${startX}px`,
-            animationDuration: `${animationDuration}s`,
-            animationDelay: `${animationDelay}s`,
-          } as React.CSSProperties,
-        });
-      }
-      setHomeShootingStars(newHomeShootingStars);
-    };
-
-    generateStars();
-    generateShootingStars();
-    generatePulsingStars();
-    generateHomeShootingStars();
-  }, []);
+  const [marketStatus, setMarketStatus] = useState<MarketStatus | null>(null);
+  const [allMarkets, setAllMarkets] = useState<MarketListItem[]>([]);
 
   // Calculate dynamic price based on selections
   const calculatePrice = () => {
@@ -187,29 +39,25 @@ function App() {
   };
 
   // Format price for display
-  const formatPrice = (price: number): string => {
+  const formatPrice = (price: number) => {
     return `$${price.toFixed(2)}`;
   };
 
-  // Update API client when auth token changes
+  // Update API client when wallet changes
   useEffect(() => {
-    updateApiClient(authToken);
-  }, [authToken]);
+    updateApiClient(walletClient);
+  }, [walletClient]);
 
   // Load data based on active tab
   useEffect(() => {
-    // Clear error and success messages when changing tabs
-    setError(null);
-    setSuccess(null);
-    
-    if (authToken) {
-      if (activeTab === 'pending') {
-        loadPendingQueries();
-      } else if (activeTab === 'history') {
-        loadQueryHistory();
-      }
+    if (activeTab === 'pending') {
+      loadPendingQueries();
+    } else if (activeTab === 'history') {
+      loadQueryHistory();
+    } else if (activeTab === 'markets') {
+      loadAllMarkets();
     }
-  }, [activeTab, authToken]);
+  }, [activeTab]);
 
   const loadPendingQueries = async () => {
     try {
@@ -229,9 +77,23 @@ function App() {
     }
   };
 
+  const loadAllMarkets = async () => {
+    try {
+      const { markets } = await api.getAllMarkets();
+      setAllMarkets(markets);
+    } catch (err: any) {
+      console.error('Failed to load markets:', err);
+    }
+  };
+
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
       setError('Please enter a search query');
+      return;
+    }
+
+    if (!isConnected) {
+      setError('Please connect your wallet to make payments');
       return;
     }
 
@@ -309,26 +171,20 @@ function App() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
-  };
-
-  const getMinDateTime = () => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + 5); // Add 5 minutes buffer
-    return now.toISOString().slice(0, 16);
-  };
-
   const handleCreateMarket = async () => {
     if (!marketQuestion.trim() || !marketSearchQuery.trim() || !marketResolutionDate) {
       setError('Please fill in all market fields');
       return;
     }
 
+    if (!isConnected) {
+      setError('Please connect your wallet to create markets');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccess(null);
-    setCreatedMarket(null);
 
     try {
       const result = await api.createMarket({
@@ -344,6 +200,10 @@ function App() {
       setMarketQuestion('');
       setMarketSearchQuery('');
       setMarketResolutionDate('');
+      
+      // Reload markets and switch to browse view
+      loadAllMarkets();
+      setMarketView('browse');
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
         const error = err as { response?: { status?: number; data?: { error?: string; details?: string } } };
@@ -372,493 +232,527 @@ function App() {
 
     setLoading(true);
     setError(null);
-    setMarketStatus(null);
 
     try {
-      const result = await api.getMarketStatus(checkingContractAddress);
-      setMarketStatus(result);
+      const status = await api.getMarketStatus(checkingContractAddress);
+      setMarketStatus(status);
     } catch (err: unknown) {
-      let message = 'Failed to fetch market status';
-      if (typeof err === 'object' && err !== null) {
-        if ('response' in err && (err as any).response?.data?.error) {
-          message = (err as any).response.data.error;
-        } else if ('message' in err) {
-          message = (err as { message: string }).message;
+      if (err && typeof err === 'object' && 'response' in err) {
+        const error = err as { response?: { status?: number; data?: { error?: string } } };
+        if (error.response?.status === 404) {
+          setError('Market not found');
+        } else if (error.response?.data?.error) {
+          setError(error.response.data.error);
+        } else {
+          setError('Failed to fetch market status');
         }
+      } else {
+        setError('Failed to fetch market status');
       }
-      setError(message);
     } finally {
       setLoading(false);
     }
   };
 
-  const renderMarketStatus = () => {
-    if (!marketStatus) return null;
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  const getMinDateTime = () => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 1); // Changed from 5 to 1 minute for testing
+    return now.toISOString().slice(0, 16);
+  };
+
+  const renderAgentResolution = (market: MarketStatus | MarketListItem) => {
+    if (!market.agentResolved) return null;
+
     return (
-      <div className="search-result">
-        <h4>Market Status for {marketStatus.contractAddress}</h4>
-        <p><strong>Question:</strong> {marketStatus.marketQuestion}</p>
-        <p><strong>Status:</strong> <span className={`status-badge status-${marketStatus.status || 'unknown'}`}>{marketStatus.status || 'Unknown'}</span></p>
-        <p><strong>Resolution Time:</strong> {formatDate(marketStatus.scheduledFor)}</p>
-        <p><strong>Search Query:</strong> {marketStatus.searchQuery}</p>
-        
-        {marketStatus.summary && (
-          <div className="result-details">
-            <h5>Settlement Search Result:</h5>
-            <p><strong>Summary:</strong> {marketStatus.summary}</p>
-          </div>
-        )}
+      <div className="agent-resolution">
+        <h5>🤖 Agent Resolution</h5>
+        <div className="resolution-details">
+          <p className="resolution-outcome">
+            <strong>Outcome:</strong> 
+            <span className={`outcome-badge ${market.agentOutcome ? 'true' : 'false'}`}>
+              {market.agentOutcome ? 'TRUE ✅' : 'FALSE ❌'}
+            </span>
+          </p>
+          {market.agentResolvedAt && (
+            <p><strong>Resolved At:</strong> {formatDate(market.agentResolvedAt)}</p>
+          )}
+          {market.agentResolutionTx && (
+            <p>
+              <strong>Transaction:</strong>{' '}
+              <a 
+                href={`https://sepolia.etherscan.io/tx/${market.agentResolutionTx}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="tx-link"
+              >
+                {market.agentResolutionTx.slice(0, 10)}...{market.agentResolutionTx.slice(-8)}
+              </a>
+            </p>
+          )}
+          {market.agentAnalysis && (
+            <details className="agent-analysis">
+              <summary>View Agent Analysis</summary>
+              <pre>{market.agentAnalysis}</pre>
+            </details>
+          )}
+        </div>
       </div>
     );
   };
 
-  // Drag handlers
-  const handleDragStart = (clientY: number) => {
-    setIsDragging(true);
-    dragStartPos.current = clientY - overlayY;
-  };
-
-  const handleDragMove = (clientY: number) => {
-    if (!isDragging) return;
-    const newY = clientY - dragStartPos.current;
-    setOverlayY(Math.min(0, newY)); // Prevent dragging down
-  };
-
-  const handleDragEnd = () => {
-    setIsDragging(false);
-    // Make it more sensitive - only need to drag 1/6 of screen height instead of 1/4
-    if (overlayY < -window.innerHeight / 6) {
-      setOverlayY(-window.innerHeight);
-      setTimeout(() => setShowIntro(false), 500); // Animation duration
-    } else {
-      setOverlayY(0);
-    }
-  };
-
-  // Add click handler to dismiss intro
-  const handleIntroClick = () => {
-    setOverlayY(-window.innerHeight);
-    setIntroDismissed(true);
-    setTimeout(() => setShowIntro(false), 500);
-  };
-
-  // Handler to show search interface
-  const handleShowSearch = () => {
-    setError(null);
-    setSuccess(null);
-    setActiveTab('search');
-    setShowSearchInterface(true);
-  };
-
-  // Taskbar component
-  const Taskbar = () => (
-    <nav className="taskbar">
-      <div className="taskbar-actions">
-        <WalletConnect />
-      </div>
-    </nav>
-  );
-
-  // Wallet connect component using Privy
-  const WalletConnect = () => (
-    <div className="wallet-connect">
-      {!authenticated ? (
-        <button onClick={login} className="wallet-button">
-          Connect Wallet
-        </button>
-      ) : (
-        <div className="wallet-connected">
-          <div className="wallet-info">
-            <span className="status-indicator">●</span>
-            <span className="address">{user?.wallet?.address || 'Connected'}</span>
-          </div>
-          <button onClick={logout} className="wallet-button">
-            Disconnect
+  return (
+    <div className="app">
+      <header>
+        <h1>Settlement Search</h1>
+        <p>Multi-source AI-powered search with x402 micropayments</p>
+        <div className="x402-info">
+          <span className="price-tag">{formatPrice(calculatePrice())}</span>
+          <span className="settlement-info">2 second settlement • No fees</span>
+        </div>
+        <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
+          <button
+            onClick={async () => {
+              try {
+                const response = await fetch('http://localhost:3001/health');
+                const data = await response.json();
+                alert(`Backend status: ${JSON.stringify(data)}`);
+              } catch (err: any) {
+                alert(`Backend error: ${err.message}`);
+              }
+            }}
+            style={{ fontSize: '12px', padding: '5px 10px' }}
+          >
+            Test Backend
           </button>
         </div>
-      )}
-    </div>
-  );
+      </header>
 
-  // Show loading screen while Privy initializes
-  if (!ready) {
-    console.log('Privy not ready, showing loading screen...');
-    return (
-      <div className="loading-container">
-        <div className="pulse-loader"></div>
-        <p>Initializing Dream Market...</p>
-      </div>
-    );
-  }
+      <main>
+        <section className="wallet-section">
+          <h2>Connect Wallet</h2>
+          <WalletConnect />
+          <p className="wallet-info">Connect your wallet to enable x402 payments</p>
+        </section>
 
-  console.log('Privy is ready, rendering main app...');
-  
-  return (
-    <div className={`App ${showIntro ? 'intro-active' : ''}`}>
-      {stars.map((star) => (
-        <div
-          key={star.id}
-          className="star"
-          style={star.style}
-        />
-      ))}
-      
-      {/* Home Screen Content - Always rendered */}
-      <div className="home-screen-content">
-        {pulsingStars.map((pulsingStar) => (
-          <div
-            key={pulsingStar.id}
-            className="pulsing-star"
-            style={pulsingStar.style}
-          />
-        ))}
-        
-        {homeShootingStars.map((shootingStar) => (
-          <div
-            key={shootingStar.id}
-            className="shooting-star home-shooting-star"
-            style={shootingStar.style}
-          />
-        ))}
-        
-        <Taskbar />
-        <div className="container">
-          <div className={`welcome-section ${introDismissed ? 'fade-in' : ''}`}>
-            <h1 className="welcome-title">Welcome to Dream Market</h1>
-            <p className="welcome-description">
-              Predict the future, earn rewards. Create and trade on prediction markets powered by real-time data and AI insights.
-            </p>
-            
-            <div className={`action-grid ${introDismissed ? 'fade-in' : ''}`}>
-              <div className="action-card">
-                <h3>Search & Predict</h3>
-                <p>Ask questions about the future and get AI-powered predictions with real-time data sources.</p>
-                <button 
-                  onClick={handleShowSearch} 
-                  className="action-btn"
-                >
-                  Start Searching
-                </button>
+        <div className="tabs">
+          <button
+            className={`tab ${activeTab === 'search' ? 'active' : ''}`}
+            onClick={() => setActiveTab('search')}
+          >
+            Search
+          </button>
+          <button
+            className={`tab ${activeTab === 'pending' ? 'active' : ''}`}
+            onClick={() => setActiveTab('pending')}
+          >
+            Pending ({pendingQueries.length})
+          </button>
+          <button
+            className={`tab ${activeTab === 'history' ? 'active' : ''}`}
+            onClick={() => setActiveTab('history')}
+          >
+            History
+          </button>
+          <button
+            className={`tab ${activeTab === 'markets' ? 'active' : ''}`}
+            onClick={() => setActiveTab('markets')}
+          >
+            Markets
+          </button>
+        </div>
+
+        {error && <div className="error-message">{error}</div>}
+        {success && <div className="success-message">{success}</div>}
+
+        {activeTab === 'search' && (
+          <section className="search-section">
+            <div className="search-form">
+              <input
+                type="text"
+                placeholder="What would you like to search for?"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && !loading && handleSearch()}
+                className="search-input"
+                disabled={loading}
+              />
+
+              <div className="schedule-option">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={isScheduled}
+                    onChange={(e) => setIsScheduled(e.target.checked)}
+                  />
+                  Schedule for later (+$0.05)
+                </label>
               </div>
-              
-              <div className="action-card">
-                <h3>Create Markets</h3>
-                <p>Create your own prediction markets and let others bet on real-world outcomes.</p>
-                <button 
-                  onClick={() => {
-                    setError(null);
-                    setSuccess(null);
-                    setActiveTab('markets');
-                  }} 
-                  className="action-btn"
-                >
-                  Create Market
-                </button>
-              </div>
-              
-              <div className="action-card">
-                <h3>Pending Queries</h3>
-                <p>Check the status of your scheduled queries and view pending predictions.</p>
-                <button 
-                  onClick={() => {
-                    setError(null);
-                    setSuccess(null);
-                    setActiveTab('pending');
-                  }} 
-                  className="action-btn"
-                >
-                  View Pending
-                </button>
-              </div>
-              
-              <div className="action-card">
-                <h3>Query History</h3>
-                <p>Review your past predictions and track your prediction accuracy over time.</p>
-                <button 
-                  onClick={() => {
-                    setError(null);
-                    setSuccess(null);
-                    setActiveTab('history');
-                  }} 
-                  className="action-btn"
-                >
-                  View History
-                </button>
-              </div>
+
+              {isScheduled && (
+                <div className="schedule-fields">
+                  <input
+                    type="datetime-local"
+                    value={scheduleDate}
+                    onChange={(e) => setScheduleDate(e.target.value)}
+                    min={getMinDateTime()}
+                    className="schedule-input"
+                    placeholder="When to execute"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email for notification (optional, +$0.05)"
+                    value={scheduleEmail}
+                    onChange={(e) => setScheduleEmail(e.target.value)}
+                    className="email-input"
+                  />
+                </div>
+              )}
+
+              <button
+                onClick={handleSearch}
+                disabled={loading || !isConnected}
+                className="search-button"
+              >
+                {loading ? 'Processing...' : 
+                 !isConnected ? 'Connect Wallet to Search' :
+                 `${isScheduled ? 'Schedule' : 'Search Now'} (${formatPrice(calculatePrice())})`}
+              </button>
             </div>
-          </div>
 
-          {loading && (
-            <div className="loading-container">
-              <div className="pulse-loader"></div>
-              <p>Processing...</p>
-            </div>
-          )}
-          {error && <p className="error-message">{error}</p>}
-          {success && <p className="success-message">{success}</p>}
+            {searchResult && (
+              <div className="search-results">
+                <h3>Search Results</h3>
+                <div className="summary">
+                  <h4>Summary</h4>
+                  <p>{searchResult.summary}</p>
+                </div>
 
-          {activeTab === 'search' && (
-            <section className="search-section">
-              {showSearchInterface && (
-                <>
-                  <div className="search-box">
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Enter your settlement query..."
-                      className="search-input"
-                      disabled={loading}
-                    />
-                    <button onClick={handleSearch} className="btn" disabled={loading}>
-                      {isScheduled ? `Schedule (${formatPrice(calculatePrice())})` : `Search (${formatPrice(calculatePrice())})`}
-                    </button>
-                  </div>
-                  
-                  <div className="search-options">
-                    <div className="option">
-                      <input
-                        type="checkbox"
-                        id="schedule-checkbox"
-                        checked={isScheduled}
-                        onChange={(e) => setIsScheduled(e.target.checked)}
-                        disabled={loading}
-                      />
-                      <label htmlFor="schedule-checkbox">Schedule for later</label>
-                    </div>
-
-                    {isScheduled && (
-                      <div className="schedule-inputs">
-                        <div className="option">
-                          <input
-                            type="datetime-local"
-                            value={scheduleDate}
-                            onChange={(e) => setScheduleDate(e.target.value)}
-                            className="schedule-input"
-                            disabled={loading}
-                            min={getMinDateTime()}
-                          />
+                {searchResult.results.map((provider, index) => (
+                  <div key={index} className="provider-results">
+                    <h4>{provider.provider}</h4>
+                    {provider.error ? (
+                      <p className="provider-error">{provider.error}</p>
+                    ) : (
+                      <>
+                        <p className="provider-answer">{provider.answer}</p>
+                        <div className="sources">
+                          {provider.sources.map((source: SearchSource, idx: number) => (
+                            <div key={idx} className="source">
+                              <a href={source.url} target="_blank" rel="noopener noreferrer">
+                                {source.title}
+                              </a>
+                              <p>{source.snippet}</p>
+                            </div>
+                          ))}
                         </div>
-                        <div className="option">
-                          <input
-                            type="email"
-                            value={scheduleEmail}
-                            onChange={(e) => setScheduleEmail(e.target.value)}
-                            placeholder="Email for notifications (optional)"
-                            className="schedule-input"
-                            disabled={loading}
-                          />
-                        </div>
-                      </div>
+                      </>
                     )}
                   </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
-                  {searchResult && (
-                    <div className="search-result">
-                      <h4>Search Results</h4>
-                      <div className="result-summary">
-                        <p><strong>Query:</strong> {searchResult.query}</p>
-                        <p><strong>Summary:</strong> {searchResult.summary}</p>
-                      </div>
-                      {searchResult.providers.map((provider, index) => (
-                        <div key={index} className="provider-result">
-                          <h5>{provider.name}</h5>
-                          <p>{provider.answer}</p>
-                          {provider.sources && provider.sources.length > 0 && (
-                            <div className="sources">
-                              {provider.sources.map((source, sourceIndex) => (
-                                <a
-                                  key={sourceIndex}
-                                  href={source.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="source-link"
-                                >
-                                  {source.title}
-                                </a>
-                              ))}
+        {activeTab === 'pending' && (
+          <section className="pending-section">
+            <h3>Pending Queries</h3>
+            {pendingQueries.length === 0 ? (
+              <p>No pending queries</p>
+            ) : (
+              <div className="query-list">
+                {pendingQueries.map((query) => (
+                  <div key={query.id} className="query-item">
+                    <div className="query-info">
+                      <strong>{query.query}</strong>
+                      <span className="schedule-time">
+                        Scheduled for: {formatDate(query.scheduledFor)}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteQuery(query.id)}
+                      className="cancel-btn"
+                      disabled={!isConnected}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {activeTab === 'history' && (
+          <section className="history-section">
+            <h3>Query History</h3>
+            {queryHistory.length === 0 ? (
+              <p>No query history</p>
+            ) : (
+              <div className="history-list">
+                {queryHistory.map((query) => (
+                  <div key={query.id} className="history-item">
+                    <div className="history-header">
+                      <strong>{query.query}</strong>
+                      <span className="history-date">
+                        {formatDate(query.executedAt || query.createdAt)}
+                      </span>
+                    </div>
+                    {query.summary && (
+                      <p className="history-summary">{query.summary}</p>
+                    )}
+                    {query.error && (
+                      <p className="history-error">Error: {query.error}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {activeTab === 'markets' && (
+          <section className="markets-section">
+            <div className="market-tabs">
+              <button
+                className={`market-tab ${marketView === 'browse' ? 'active' : ''}`}
+                onClick={() => setMarketView('browse')}
+              >
+                Browse Markets ({allMarkets.length})
+              </button>
+              <button
+                className={`market-tab ${marketView === 'create' ? 'active' : ''}`}
+                onClick={() => setMarketView('create')}
+              >
+                Create Market
+              </button>
+            </div>
+
+            {marketView === 'browse' && (
+              <div className="markets-browse">
+                {allMarkets.length === 0 ? (
+                  <p className="no-markets">No markets created yet. Be the first to create one!</p>
+                ) : (
+                  <div className="markets-list">
+                    {allMarkets.map((market) => (
+                      <div key={market.contractAddress} className={`market-card ${market.isOwnMarket ? 'own-market' : ''}`}>
+                        <div className="market-header">
+                          <h4>{market.marketQuestion}</h4>
+                          {market.isOwnMarket && <span className="own-badge">Your Market</span>}
+                        </div>
+                        <div className="market-info">
+                          <p><strong>Contract:</strong> <code>{market.contractAddress}</code></p>
+                          <p><strong>Search Query:</strong> {market.searchQuery}</p>
+                          <p><strong>Status:</strong> <span className={`status-badge ${market.status}`}>{market.status}</span></p>
+                          <p><strong>Resolution:</strong> {formatDate(market.scheduledFor)}</p>
+                          {market.executedAt && (
+                            <p><strong>Resolved:</strong> {formatDate(market.executedAt)}</p>
+                          )}
+                          {market.summary && (
+                            <div className="market-result-summary">
+                              <p><strong>Result:</strong> {market.summary}</p>
                             </div>
                           )}
+                          {renderAgentResolution(market)}
                         </div>
-                      ))}
+                        <div className="market-actions">
+                          <button
+                            onClick={() => {
+                              setCheckingContractAddress(market.contractAddress);
+                              setMarketView('create');
+                              handleCheckMarketStatus();
+                            }}
+                            className="view-details-btn"
+                          >
+                            View Details
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {marketView === 'create' && (
+              <>
+                <h3>Create Prediction Market</h3>
+                <div className="market-form">
+                  <div className="form-group">
+                    <label>Market Question</label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Will ETH price be above $3000 by end of year?"
+                      value={marketQuestion}
+                      onChange={(e) => setMarketQuestion(e.target.value)}
+                      className="market-input"
+                      disabled={loading}
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Resolution Search Query</label>
+                    <input
+                      type="text"
+                      placeholder="e.g., current ETH price in USD"
+                      value={marketSearchQuery}
+                      onChange={(e) => setMarketSearchQuery(e.target.value)}
+                      className="market-input"
+                      disabled={loading}
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Resolution Date & Time</label>
+                    <input
+                      type="datetime-local"
+                      value={marketResolutionDate}
+                      onChange={(e) => setMarketResolutionDate(e.target.value)}
+                      min={getMinDateTime()}
+                      className="market-input"
+                      disabled={loading}
+                    />
+                  </div>
+                  
+                  <button
+                    onClick={handleCreateMarket}
+                    disabled={loading || !isConnected}
+                    className="market-button"
+                  >
+                    {loading ? 'Creating...' : 
+                     !isConnected ? 'Connect Wallet to Create Market' :
+                     'Create Market ($0.25)'}
+                  </button>
+                </div>
+
+                {createdMarket && (
+                  <div className="market-result">
+                    <h4>Market Created Successfully!</h4>
+                    <div className="market-details">
+                      <p><strong>Contract Address:</strong> <code>{createdMarket.marketContractAddress}</code></p>
+                      <p><strong>Transaction Hash:</strong> <code>{createdMarket.transactionHash}</code></p>
+                      <p><strong>Query ID:</strong> {createdMarket.queryId}</p>
+                      <p><strong>Resolution Scheduled:</strong> {formatDate(createdMarket.scheduledFor)}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="market-status-check">
+                  <h4>Check Market Status</h4>
+                  <div className="status-form">
+                    <input
+                      type="text"
+                      placeholder="Enter contract address (0x...)"
+                      value={checkingContractAddress}
+                      onChange={(e) => setCheckingContractAddress(e.target.value)}
+                      className="market-input"
+                      disabled={loading}
+                    />
+                    <button
+                      onClick={handleCheckMarketStatus}
+                      disabled={loading}
+                      className="status-button"
+                    >
+                      {loading ? 'Checking...' : 'Check Status'}
+                    </button>
+                  </div>
+
+                  {marketStatus && (
+                    <div className="market-status">
+                      <h5>Market Status</h5>
+                      <div className="status-details">
+                        <p><strong>Question:</strong> {marketStatus.marketQuestion}</p>
+                        <p><strong>Search Query:</strong> {marketStatus.searchQuery}</p>
+                        <p><strong>Status:</strong> <span className={`status-badge ${marketStatus.status}`}>{marketStatus.status}</span></p>
+                        <p><strong>Scheduled For:</strong> {formatDate(marketStatus.scheduledFor)}</p>
+                        {marketStatus.executedAt && (
+                          <p><strong>Executed At:</strong> {formatDate(marketStatus.executedAt)}</p>
+                        )}
+                        {marketStatus.summary && (
+                          <div className="market-summary">
+                            <p><strong>Result Summary:</strong></p>
+                            <p>{marketStatus.summary}</p>
+                          </div>
+                        )}
+                        {marketStatus.sources && marketStatus.sources.length > 0 && (
+                          <div className="search-results">
+                            <h5>Search Results</h5>
+                            {marketStatus.sources.map((provider, index) => (
+                              <div key={index} className="provider-results">
+                                <h6>{provider.provider}</h6>
+                                {provider.error ? (
+                                  <p className="provider-error">{provider.error}</p>
+                                ) : (
+                                  <>
+                                    <p className="provider-answer">{provider.answer}</p>
+                                    {provider.sources && provider.sources.length > 0 && (
+                                      <div className="sources">
+                                        {provider.sources.map((source: SearchSource, idx: number) => (
+                                          <div key={idx} className="source">
+                                            <a href={source.url} target="_blank" rel="noopener noreferrer">
+                                              {source.title}
+                                            </a>
+                                            <p>{source.snippet}</p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {marketStatus.error && (
+                          <p className="market-error"><strong>Error:</strong> {marketStatus.error}</p>
+                        )}
+                        {renderAgentResolution(marketStatus)}
+                      </div>
                     </div>
                   )}
-                </>
-              )}
-            </section>
-          )}
-
-          {activeTab === 'pending' && (
-            <section className="pending-section">
-              <h3>Pending Queries</h3>
-              {pendingQueries.length === 0 ? (
-                <p>No pending queries.</p>
-              ) : (
-                <div className="query-list">
-                  {pendingQueries.map((query) => (
-                    <div key={query.id} className="query-item">
-                      <p><strong>Query:</strong> {query.query}</p>
-                      <p><strong>Scheduled for:</strong> {formatDate(query.scheduledFor)}</p>
-                      <button
-                        onClick={() => handleDeleteQuery(query.id)}
-                        className="btn-delete"
-                        disabled={loading}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ))}
                 </div>
-              )}
-            </section>
-          )}
-
-          {activeTab === 'history' && (
-            <section className="history-section">
-              <h3>Query History</h3>
-              {queryHistory.length === 0 ? (
-                <p>No query history.</p>
-              ) : (
-                <div className="query-list">
-                  {queryHistory.map((query) => (
-                    <div key={query.id} className="query-item history-item">
-                      <p><strong>Query:</strong> {query.query}</p>
-                      <p><strong>Date:</strong> {formatDate(query.createdAt)}</p>
-                      <p><strong>Status:</strong> {query.status}</p>
-                      {query.summary && <p><strong>Summary:</strong> {query.summary}</p>}
-                    </div>
-                  ))}
+                
+                {/* Test button for manual execution */}
+                <div style={{ marginTop: '20px', padding: '20px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '10px' }}>
+                  <h5 style={{ marginBottom: '10px' }}>Testing Tools</h5>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await api.executeScheduledQueries();
+                        setSuccess(`Executed queries: ${response.message}`);
+                        // Refresh market status if we have one
+                        if (checkingContractAddress) {
+                          handleCheckMarketStatus();
+                        }
+                      } catch (err) {
+                        setError('Failed to execute scheduled queries');
+                      }
+                    }}
+                    className="test-backend-btn"
+                    style={{ width: '100%' }}
+                  >
+                    Manually Execute Scheduled Queries (Testing)
+                  </button>
+                  <p style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
+                    This will execute all pending queries that are past their scheduled time.
+                  </p>
                 </div>
-              )}
-            </section>
-          )}
+              </>
+            )}
+          </section>
+        )}
+      </main>
 
-          {activeTab === 'markets' && (
-            <section className="markets-section">
-              <h3>Create Prediction Market</h3>
-              <div className="market-form">
-                <div className="form-group">
-                  <label htmlFor="market-question">Market Question:</label>
-                  <input
-                    type="text"
-                    id="market-question"
-                    value={marketQuestion}
-                    onChange={(e) => setMarketQuestion(e.target.value)}
-                    placeholder="e.g., Will Bitcoin reach $100k by end of 2024?"
-                    className="market-input"
-                    disabled={loading}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="market-search-query">Search Query for Resolution:</label>
-                  <input
-                    type="text"
-                    id="market-search-query"
-                    value={marketSearchQuery}
-                    onChange={(e) => setMarketSearchQuery(e.target.value)}
-                    placeholder="e.g., Bitcoin price December 31 2024"
-                    className="market-input"
-                    disabled={loading}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="market-resolution-date">Resolution Date:</label>
-                  <input
-                    type="date"
-                    id="market-resolution-date"
-                    value={marketResolutionDate}
-                    onChange={(e) => setMarketResolutionDate(e.target.value)}
-                    className="market-input"
-                    disabled={loading}
-                  />
-                </div>
-                <button onClick={handleCreateMarket} className="btn" disabled={loading}>
-                  Create Market
-                </button>
-              </div>
-
-              {createdMarket && (
-                <div className="search-result">
-                  <h4>Market Created Successfully!</h4>
-                  <div className="market-details">
-                    <p><strong>Market ID:</strong> <code>{createdMarket.marketId}</code></p>
-                    <p><strong>Contract Address:</strong> <code>{createdMarket.contractAddress}</code></p>
-                    <p><strong>Question:</strong> {createdMarket.question}</p>
-                    <p><strong>Resolution Date:</strong> {createdMarket.resolutionDate}</p>
-                  </div>
-                </div>
-              )}
-
-              <hr className="divider" />
-
-              <h3>Check Market Status</h3>
-              <div className="market-status-checker">
-                <input
-                  type="text"
-                  value={checkingContractAddress}
-                  onChange={(e) => setCheckingContractAddress(e.target.value)}
-                  placeholder="Enter contract address"
-                  className="market-input"
-                />
-                <button onClick={handleCheckMarketStatus} className="btn" disabled={loading}>
-                  Check Status
-                </button>
-              </div>
-
-              {marketStatus && renderMarketStatus()}
-            </section>
-          )}
-        </div>
-        
-        <footer className="app-footer">
-          <p>
-            Powered by{' '}
-            <a 
-              href="https://x402.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="footer-link"
-            >
-              x402 payment protocol
-            </a>
-          </p>
-        </footer>
-      </div>
-
-      {showIntro && (
-        <div
-          className="intro-overlay"
-          style={{ transform: `translateY(${overlayY}px)` }}
-          onTouchStart={(e) => handleDragStart(e.touches[0].clientY)}
-          onTouchMove={(e) => handleDragMove(e.touches[0].clientY)}
-          onTouchEnd={handleDragEnd}
-          onMouseDown={(e) => handleDragStart(e.clientY)}
-          onMouseMove={(e) => handleDragMove(e.clientY)}
-          onMouseUp={handleDragEnd}
-          onMouseLeave={handleDragEnd}
-          onClick={handleIntroClick}
-        >
-          <div className="moonlight"></div>
-          
-          {shootingStars.map((shootingStar) => (
-            <div
-              key={shootingStar.id}
-              className="shooting-star"
-              style={shootingStar.style}
-            />
-          ))}
-
-          <div className="intro-content">
-            <h1 className="intro-title">Dream Big</h1>
-          </div>
-
-          <div className="swipe-indicator">
-            <div className="arrow bounce">↑</div>
-            <p>Swipe up</p>
-            <p>or click to enter</p>
-          </div>
-        </div>
-      )}
+      <footer>
+        <p>
+          Powered by x402 payment protocol •
+          <a href="https://x402.org" target="_blank" rel="noopener noreferrer"> Learn more</a>
+        </p>
+      </footer>
     </div>
   );
 }

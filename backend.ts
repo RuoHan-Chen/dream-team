@@ -152,6 +152,9 @@ setInterval(() => {
   });
 }, 60 * 1000); // Every minute
 
+// Default user for non-authenticated mode
+const DEFAULT_USER = "0xNO_AUTH_USER";
+
 // Create Hono app
 const app = new Hono();
 
@@ -361,8 +364,15 @@ app.post("/auth/verify", async (c) => {
   }
 });
 
+// --- TEMPORARILY DISABLED AUTH FOR TESTING ---
 // Middleware to verify JWT
 async function verifyAuth(c: any, next: any) {
+  // TEMPORARILY DISABLED - just pass through with test user
+  (c.req as any).user = { address: "0xTEST_USER_NO_AUTH" };
+  await next();
+  return;
+  
+  /* ORIGINAL CODE - UNCOMMENT TO RE-ENABLE AUTH
   const authHeader = c.req.header("Authorization");
 
   if (!authHeader?.startsWith("Bearer ")) {
@@ -378,6 +388,7 @@ async function verifyAuth(c: any, next: any) {
   } catch (error) {
     return c.json({ error: "Invalid or expired token" }, 401);
   }
+  */
 }
 
 // Search functions for each provider
@@ -558,10 +569,9 @@ Provide ONLY one clear, factual sentence that answers the query. No additional f
 // Payment verification and settlement is now handled automatically by x402-hono middleware
 
 // Combined search endpoint that queries all providers
-app.post("/api/search/answer", verifyAuth, async (c) => {
+app.post("/api/search/answer", async (c) => {
   try {
     const { query, scheduleFor, userEmail }: SearchRequest = await c.req.json();
-    const user = (c.req as any).user;
 
     if (!query || query.trim().length === 0) {
       return c.json({ error: "Query is required" }, 400);
@@ -624,7 +634,6 @@ app.post("/api/search/answer", verifyAuth, async (c) => {
         scheduleFor,
         userEmail,
         currentTime: new Date().toISOString(),
-        user: user.address
       });
 
       const scheduledDate = new Date(scheduleFor);
@@ -654,14 +663,14 @@ app.post("/api/search/answer", verifyAuth, async (c) => {
       // For now, users should use ISO format with timezone offset or UTC
 
       // Ensure scheduled date is at least 5 minutes in the future to account for processing time
-      const minFutureTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes from now
+      const minFutureTime = new Date(Date.now() + 1 * 60 * 1000); // 1 minute from now (changed for testing)
       if (scheduledDate < minFutureTime) {
         console.error('[ScheduleSvc] Date is too close to current time:', {
           scheduledDate: scheduledDate.toISOString(),
           minRequired: minFutureTime.toISOString(),
           difference: scheduledDate.getTime() - minFutureTime.getTime()
         });
-        return c.json({ error: "Schedule date must be at least 5 minutes in the future" }, 400);
+        return c.json({ error: "Schedule date must be at least 1 minute in the future" }, 400);
       }
 
       // Validate email for scheduled queries with email notification
@@ -671,8 +680,8 @@ app.post("/api/search/answer", verifyAuth, async (c) => {
       }
 
       // Create scheduled query with optional email
-      const queryId = await database.createQuery(user.address, query, scheduledDate, userEmail || undefined);
-      console.log(`Scheduled query ${queryId} for user ${user.address} at ${scheduleFor}${userEmail ? ` with email ${userEmail}` : ''}`);
+      const queryId = await database.createQuery(DEFAULT_USER, query, scheduledDate, userEmail || undefined);
+      console.log(`Scheduled query ${queryId} for "${query}" at ${scheduleFor}${userEmail ? ` with email ${userEmail}` : ''}`);
 
       // Send confirmation email if provided
       if (userEmail) {
@@ -702,7 +711,7 @@ app.post("/api/search/answer", verifyAuth, async (c) => {
       });
     }
 
-    console.log(`Processing multi-source search for user ${user?.address}: "${query}"`);
+    console.log(`Processing multi-source search for "${query}"`);
 
     // Execute all searches in parallel
     const allResults = await searchAllProviders(query);
@@ -743,7 +752,7 @@ app.post("/api/search/answer", verifyAuth, async (c) => {
     const summary = summaryResponse.choices[0]?.message?.content || 'No summary available';
 
     // Save to database (for immediate execution)
-    const queryId = await database.createQuery(user.address, query);
+    const queryId = await database.createQuery(DEFAULT_USER, query);
     await database.updateQueryStatus(queryId, 'completed');
     await database.createQueryResult(queryId, summary, transformedResults, null);
 
@@ -764,10 +773,9 @@ app.post("/api/search/answer", verifyAuth, async (c) => {
 });
 
 // Market creation endpoint
-app.post("/api/markets/create", verifyAuth, async (c) => {
+app.post("/api/markets/create", async (c) => {
   try {
     const { marketQuestion, searchQuery, resolutionDate } = await c.req.json();
-    const user = (c.req as any).user;
 
     // Validate inputs
     if (!marketQuestion || !searchQuery || !resolutionDate) {
@@ -783,9 +791,9 @@ app.post("/api/markets/create", verifyAuth, async (c) => {
     }
 
     // Ensure resolution date is at least 5 minutes in the future
-    const minFutureTime = new Date(Date.now() + 5 * 60 * 1000);
+    const minFutureTime = new Date(Date.now() + 1 * 60 * 1000);
     if (scheduledDate < minFutureTime) {
-      return c.json({ error: "Resolution date must be at least 5 minutes in the future" }, 400);
+      return c.json({ error: "Resolution date must be at least 1 minute in the future" }, 400);
     }
 
     // Check if contract deployment is configured
@@ -833,7 +841,7 @@ app.post("/api/markets/create", verifyAuth, async (c) => {
     }
 
     // Create scheduled query first
-    const queryId = await database.createQuery(user.address, searchQuery, scheduledDate);
+    const queryId = await database.createQuery(DEFAULT_USER, searchQuery, scheduledDate);
     console.log(`Created scheduled query ${queryId} for market resolution`);
 
     // Deploy the escrow contract
@@ -864,7 +872,7 @@ app.post("/api/markets/create", verifyAuth, async (c) => {
       console.log(`Contract deployed at: ${contractAddress}`);
 
       // Link the market to the query
-      await database.createMarketQuery(contractAddress, queryId, marketQuestion);
+      await database.createMarketQuery(contractAddress, queryId, marketQuestion, DEFAULT_USER);
 
       return c.json({
         success: true,
@@ -873,14 +881,15 @@ app.post("/api/markets/create", verifyAuth, async (c) => {
         scheduledFor: resolutionDate,
         transactionHash: txHash,
         message: "Market created successfully. The settlement search will execute at the resolution time.",
-        pricePaid: priceString
+        pricePaid: priceString,
+        creatorAddress: DEFAULT_USER
       });
 
     } catch (deployError) {
       console.error('Contract deployment error:', deployError);
       
       // Clean up the query if deployment failed
-      await database.deleteQuery(queryId, user.address);
+      await database.deleteQuery(queryId, DEFAULT_USER);
       
       return c.json({ 
         error: "Failed to deploy market contract", 
@@ -895,10 +904,9 @@ app.post("/api/markets/create", verifyAuth, async (c) => {
 });
 
 // Get market status by contract address
-app.get("/api/markets/:contractAddress", verifyAuth, async (c) => {
+app.get("/api/markets/:contractAddress", async (c) => {
   try {
     const contractAddress = c.req.param("contractAddress");
-    const user = (c.req as any).user;
 
     // Get market data from database
     const marketQuery = await database.getMarketByContractAddress(contractAddress);
@@ -912,11 +920,6 @@ app.get("/api/markets/:contractAddress", verifyAuth, async (c) => {
       return c.json({ error: "Associated query not found" }, 404);
     }
 
-    // Only return data if user owns the query
-    if (query.user_address !== user.address) {
-      return c.json({ error: "Unauthorized" }, 403);
-    }
-
     return c.json({
       contractAddress: marketQuery.market_contract_address,
       marketQuestion: marketQuery.market_question,
@@ -927,7 +930,13 @@ app.get("/api/markets/:contractAddress", verifyAuth, async (c) => {
       executedAt: query.executed_at,
       summary: query.summary,
       sources: query.sources ? JSON.parse(query.sources) : null,
-      error: query.error
+      error: query.error,
+      // Agent resolution data
+      agentResolved: marketQuery.agent_resolved || false,
+      agentOutcome: marketQuery.agent_outcome,
+      agentResolutionTx: marketQuery.agent_resolution_tx,
+      agentResolvedAt: marketQuery.agent_resolved_at,
+      agentAnalysis: marketQuery.agent_analysis
     });
   } catch (error) {
     console.error("Error fetching market status:", error);
@@ -935,17 +944,51 @@ app.get("/api/markets/:contractAddress", verifyAuth, async (c) => {
   }
 });
 
+// Get all markets
+app.get("/api/markets", async (c) => {
+  try {
+    const markets = await database.getAllMarkets();
+    
+    // Transform the data for frontend
+    const transformedMarkets = markets.map(market => ({
+      contractAddress: market.market_contract_address,
+      marketQuestion: market.market_question,
+      creatorAddress: market.creator_address,
+      createdAt: market.created_at,
+      queryId: market.query_id,
+      searchQuery: market.search_query,
+      scheduledFor: market.scheduled_for,
+      executedAt: market.executed_at,
+      status: market.status,
+      summary: market.summary,
+      sources: market.sources ? JSON.parse(market.sources) : null,
+      error: market.error,
+      isOwnMarket: market.creator_address === DEFAULT_USER, // For now, all markets are "own" since auth is disabled
+      // Agent resolution data
+      agentResolved: market.agent_resolved || false,
+      agentOutcome: market.agent_outcome,
+      agentResolutionTx: market.agent_resolution_tx,
+      agentResolvedAt: market.agent_resolved_at,
+      agentAnalysis: market.agent_analysis
+    }));
+    
+    return c.json({ markets: transformedMarkets });
+  } catch (error) {
+    console.error("Error fetching all markets:", error);
+    return c.json({ error: "Failed to fetch markets" }, 500);
+  }
+});
+
 // Legacy single-source search endpoint (kept for backwards compatibility)
-app.post("/api/search", verifyAuth, async (c) => {
+app.post("/api/search", async (c) => {
   try {
     const { query }: SearchRequest = await c.req.json();
-    const user = (c.req as any).user;
 
     if (!query || query.trim().length === 0) {
       return c.json({ error: "Query is required" }, 400);
     }
 
-    console.log(`Processing search for user ${user?.address}: "${query}"`);
+    console.log(`Processing search for "${query}"`);
 
     const exaResult = await searchWithExa(query);
 
@@ -963,10 +1006,9 @@ app.post("/api/search", verifyAuth, async (c) => {
 });
 
 // Get pending queries
-app.get("/api/queries/pending", verifyAuth, async (c) => {
+app.get("/api/queries/pending", async (c) => {
   try {
-    const user = (c.req as any).user;
-    const queries = await database.getPendingQueries(user.address);
+    const queries = await database.getPendingQueries(DEFAULT_USER);
 
     return c.json({
       queries: queries.map((q: any) => ({
@@ -984,11 +1026,10 @@ app.get("/api/queries/pending", verifyAuth, async (c) => {
 });
 
 // Get query history
-app.get("/api/queries/history", verifyAuth, async (c) => {
+app.get("/api/queries/history", async (c) => {
   try {
-    const user = (c.req as any).user;
     const limit = parseInt(c.req.query("limit") || "50");
-    const queries = await database.getQueryHistory(user.address, limit);
+    const queries = await database.getQueryHistory(DEFAULT_USER, limit);
 
     return c.json({
       queries: queries.map((q: any) => ({
@@ -1009,19 +1050,13 @@ app.get("/api/queries/history", verifyAuth, async (c) => {
 });
 
 // Get specific query result
-app.get("/api/queries/:id", verifyAuth, async (c) => {
+app.get("/api/queries/:id", async (c) => {
   try {
-    const user = (c.req as any).user;
     const queryId = parseInt(c.req.param("id"));
 
     const query = await database.getQueryById(queryId);
     if (!query) {
       return c.json({ error: "Query not found" }, 404);
-    }
-
-    // Verify ownership
-    if (query.user_address !== user.address) {
-      return c.json({ error: "Unauthorized" }, 403);
     }
 
     return c.json({
@@ -1042,18 +1077,17 @@ app.get("/api/queries/:id", verifyAuth, async (c) => {
 });
 
 // Delete scheduled query
-app.delete("/api/queries/:id", verifyAuth, async (c) => {
+app.delete("/api/queries/:id", async (c) => {
   try {
-    const user = (c.req as any).user;
     const queryId = parseInt(c.req.param("id"));
 
-    console.log(`Delete request: queryId=${queryId}, userAddress=${user.address}`);
+    console.log(`Delete request: queryId=${queryId}`);
 
     // Get the query first to debug
     const query = await database.getQueryById(queryId);
-    console.log(`Query found:`, query ? { id: query.id, user_address: query.user_address, status: query.status } : 'null');
+    console.log(`Query found:`, query ? { id: query.id, status: query.status } : 'null');
 
-    const success = await database.deleteQuery(queryId, user.address);
+    const success = await database.deleteQuery(queryId, DEFAULT_USER);
     console.log(`Delete result: ${success}`);
 
     if (!success) {
@@ -1092,6 +1126,14 @@ app.post("/api/admin/execute-scheduled", async (c) => {
 // Start scheduler
 scheduler.start();
 
+// TEMPORARILY: Create test user for auth-disabled testing
+database.createUser(DEFAULT_USER).then(() => {
+  console.log("Default user created for non-authenticated mode");
+}).catch(err => {
+  // Ignore error if user already exists
+  console.log("Default user already exists");
+});
+
 // Start server
 const port = parseInt(process.env.PORT || "3001");
 console.log(`Settlement Search Server starting on port ${port}...`);
@@ -1102,4 +1144,5 @@ serve({
 });
 
 console.log(`Server running at http://localhost:${port}`);
-console.log(`Expecting client at ${process.env.CLIENT_URL || "http://localhost:8080"}`); 
+console.log(`Expecting client at ${process.env.CLIENT_URL || "http://localhost:8080"}`);
+console.log("\n⚠️  AUTH IS TEMPORARILY DISABLED FOR TESTING ⚠️"); 

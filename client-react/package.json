@@ -1,26 +1,26 @@
 {
-  "name": "settlement-search-client",
-  "version": "1.0.0",
+  "name": "client-react",
+  "private": true,
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@privy-io/react-auth": "^1.99.1",
-    "axios": "^1.10.0",
+    "axios": "^1.7.9",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "siwe": "^2.3.0",
-    "viem": "^2.31.3",
-    "x402-axios": "^0.4.0"
+    "viem": "^2.10.0",
+    "x402-axios": "^0.4.1"
   },
   "devDependencies": {
-    "@types/react": "^18.3.17",
-    "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "^4.4.1",
-    "typescript": "^5.8.3",
-    "vite": "^6.3.5"
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.0"
   }
 }

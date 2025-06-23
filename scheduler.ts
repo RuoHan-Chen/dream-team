@@ -4,6 +4,7 @@ import { searchAllProviders } from './search-providers';
 import { sendSearchResultEmail } from './email';
 import { OpenAI } from 'openai';
 import { config } from 'dotenv';
+import { resolveMarketFromScheduler } from './agent/market-resolver-agent';
 
 // Load environment variables
 config({ path: '.env' });
@@ -96,6 +97,56 @@ export class QueryScheduler {
       // Store results
       await database.createQueryResult(query.id, summary, transformedResults, null);
       await database.updateQueryStatus(query.id, 'completed');
+
+      // Check if this query is associated with a market
+      const market = await database.getMarketByQueryId(query.id);
+      if (market) {
+        console.log(`Query ${query.id} is associated with market ${market.market_contract_address}`);
+        
+        // Check if we have ORACLE_PRIVATE_KEY configured
+        if (process.env.ORACLE_PRIVATE_KEY) {
+          console.log('[Scheduler] ORACLE_PRIVATE_KEY is loaded (first 10 chars):', process.env.ORACLE_PRIVATE_KEY.substring(0, 10) + '...');
+          try {
+            console.log(`Attempting to resolve market ${market.market_contract_address}`);
+            
+            // Call the agent to resolve the market
+            const resolveResult = await resolveMarketFromScheduler(
+              market.market_contract_address,
+              market.market_question,
+              summary,
+              transformedResults
+            );
+            
+            if (resolveResult.success) {
+              console.log(`Market resolved successfully! Outcome: ${resolveResult.outcome}`);
+              console.log(`Resolution details:`, resolveResult.message);
+              
+              // Extract transaction hash from agent message if available
+              const txHashMatch = resolveResult.message.match(/Transaction Hash:\*?\*?\s*([0-9a-fA-Fx]+)/);
+              const txHash = txHashMatch ? txHashMatch[1] : '';
+              
+              // Store the agent's resolution data in the database
+              if (resolveResult.outcome !== undefined) {
+                await database.updateMarketResolution(
+                  market.market_contract_address,
+                  resolveResult.outcome,
+                  txHash,
+                  resolveResult.message
+                );
+                console.log(`Stored agent resolution data for market ${market.market_contract_address}`);
+              } else {
+                console.log('[Scheduler] WARNING: Agent outcome is undefined, not storing resolution');
+              }
+            } else {
+              console.error(`Failed to resolve market:`, resolveResult.message);
+            }
+          } catch (resolveError) {
+            console.error(`Failed to resolve market ${market.market_contract_address}:`, resolveError);
+          }
+        } else {
+          console.log('ORACLE_PRIVATE_KEY not set - skipping automatic market resolution');
+        }
+      }
 
       // Send email notification if user provided an email
       if (query.user_email && query.scheduled_for) {

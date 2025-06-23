@@ -4,6 +4,11 @@ import { createWalletClient, createPublicClient, http, parseAbi, getContract } f
 import { sepolia } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
 import type { Hex } from 'viem';
+import { config } from 'dotenv';
+
+// Load environment variables
+config({ path: '../.env' }); // Load from parent directory
+config({ path: '.env' }); // Also try local directory
 
 // Contract ABI - only including the functions we need
 const escrowABI = parseAbi([
@@ -30,7 +35,17 @@ export const resolveTool = tool({
   async execute({ contractAddress, outcome, privateKey }) {
     try {
       // Get private key from args or environment
-      const oraclePrivateKey = (privateKey !== null ? privateKey : process.env.ORACLE_PRIVATE_KEY) as Hex;
+      // Handle the case where agent passes string "null"
+      let oraclePrivateKey: Hex | undefined;
+      if (privateKey && privateKey !== 'null' && privateKey !== 'undefined') {
+        oraclePrivateKey = privateKey as Hex;
+      } else {
+        oraclePrivateKey = process.env.ORACLE_PRIVATE_KEY as Hex;
+      }
+      
+      console.log('[ResolveTool] Private key source:', privateKey ? 'argument' : 'environment');
+      console.log('[ResolveTool] Private key exists:', !!oraclePrivateKey);
+      console.log('[ResolveTool] Private key first 10 chars:', oraclePrivateKey ? oraclePrivateKey.substring(0, 10) + '...' : 'none');
       
       if (!oraclePrivateKey) {
         throw new Error('No private key provided. Please provide the oracle\'s private key or set ORACLE_PRIVATE_KEY environment variable');
@@ -38,18 +53,19 @@ export const resolveTool = tool({
 
       // Create account from private key
       const account = privateKeyToAccount(oraclePrivateKey);
+      console.log('[ResolveTool] Oracle account address:', account.address);
 
       // Create wallet client for sending transactions
       const walletClient = createWalletClient({
         account,
         chain: sepolia,
-        transport: http(),
+        transport: http(process.env.SEPOLIA_RPC_URL),
       });
 
       // Create public client for reading contract state
       const publicClient = createPublicClient({
         chain: sepolia,
-        transport: http(),
+        transport: http(process.env.SEPOLIA_RPC_URL),
       });
 
       // Get contract instance
@@ -61,23 +77,27 @@ export const resolveTool = tool({
 
       // First, let's check if the caller is the oracle
       const oracleAddress = await contract.read.oracle();
+      console.log('[ResolveTool] Contract oracle address:', oracleAddress);
+      console.log('[ResolveTool] Our oracle address:', account.address);
+      console.log('[ResolveTool] Addresses match:', oracleAddress.toLowerCase() === account.address.toLowerCase());
+      
       if (oracleAddress.toLowerCase() !== account.address.toLowerCase()) {
         return `Error: Your address (${account.address}) is not the oracle. The oracle address is ${oracleAddress}`;
       }
 
       // Check if the market is still open (state = 0)
       const state = await contract.read.state();
-      if (state !== 0n) {
+      if (state !== 0) {
         return 'Error: The market has already been resolved';
       }
 
-      // Check if we're past the deadline
-      const deadline = await contract.read.deadline();
-      const currentTime = BigInt(Math.floor(Date.now() / 1000));
-      if (currentTime < deadline) {
-        const deadlineDate = new Date(Number(deadline) * 1000);
-        return `Error: Cannot resolve yet. The deadline is ${deadlineDate.toLocaleString()}`;
-      }
+      // For testing - deadline check removed, oracle can resolve at any time
+      // const deadline = await contract.read.deadline();
+      // const currentTime = BigInt(Math.floor(Date.now() / 1000));
+      // if (currentTime < deadline) {
+      //   const deadlineDate = new Date(Number(deadline) * 1000);
+      //   return `Error: Cannot resolve yet. The deadline is ${deadlineDate.toLocaleString()}`;
+      // }
 
       // Get some contract info for the response
       const question = await contract.read.question();
@@ -136,7 +156,7 @@ export const getContractInfoTool = tool({
       // Create public client for reading
       const publicClient = createPublicClient({
         chain: sepolia,
-        transport: http(),
+        transport: http(process.env.SEPOLIA_RPC_URL),
       });
 
       // Get contract instance for reading
@@ -159,7 +179,7 @@ export const getContractInfoTool = tool({
 
       const deadlineDate = new Date(Number(deadline) * 1000);
       const currentTime = new Date();
-      const marketState = state === 0n ? 'Open' : 'Resolved';
+      const marketState = state === 0 ? 'Open' : 'Resolved';
 
       return `**Escrow Contract Information**
 
@@ -179,4 +199,4 @@ ${marketState === 'Open' && deadlineDate <= currentTime ? '⚠️ This market ca
       return `Failed to get contract info: ${error.message}`;
     }
   },
-}); 
+});
