@@ -1,16 +1,39 @@
-# Settlement Search
+# Dream Market
 
 A multi-source AI-powered search application with x402 micropayments and SIWE authentication. Search across multiple providers (Exa, Perplexity, Brave Search, Tavily) and get AI-generated summaries - all powered by cryptocurrency micropayments.
+
+# Flow Blockchain Integration
+
+Locked PYUSD is bridged from the betting escrow contract to Flow Testnet to earn yield.
+
+## User Flow
+
+1. **Place Bet**  
+   Users stake PYUSD into the escrow contract.
+
+2. **Bridge & Lend**  
+   Escrowed PYUSD is bridged to Flow Testnet and lent out to earn yield.
+
+3. **Resolve Market**  
+   Once the outcome is determined, the market is resolved.
+
+4. **Unlend & Return**  
+   Lent PYUSD is unbridged back to the escrow contract.
+
+5. **Distribute Funds**  
+   Users receive their original stake plus any earned yield.
+
 
 ## 🌟 Features
 
 - **Multi-Source Search**: Queries Exa, Perplexity, Brave Search, and Tavily simultaneously
 - **AI-Powered Summaries**: GPT-4o synthesizes results from all sources
-- **x402 Micropayments**: Pay-per-search using USDC on Base Sepolia
+- **x402 Micropayments**: Pay-per-search using PYUSD on Base Sepolia
 - **SIWE Authentication**: Secure wallet-based authentication
 - **Scheduled Queries**: Schedule searches for future execution
 - **Email Notifications**: Get results delivered to your inbox
 - **Dynamic Pricing**: $0.05 base + $0.05 for scheduling + $0.05 for email notifications
+- **Flow + PYUSD **: Built on the Flow blockchain and uses PYUSD transactions
 
 ## 🛠️ Tech Stack
 
@@ -40,8 +63,7 @@ A multi-source AI-powered search application with x402 micropayments and SIWE au
 
 - Node.js 18+
 - MetaMask or compatible Web3 wallet
-- Base Sepolia ETH for gas fees
-- Base Sepolia USDC for payments (min 0.05 USDC)
+- Sepolia PYUSD for payments (min 0.05 PYUSD)
 
 ### Installation
 
@@ -72,7 +94,7 @@ A multi-source AI-powered search application with x402 micropayments and SIWE au
 
 5. **Configure Wallet**
    - Set your `BUSINESS_WALLET_ADDRESS` in `.env`
-   - This wallet will receive USDC payments
+   - This wallet will receive PYUSD payments
 
 ### Development
 
@@ -96,10 +118,10 @@ npm start
 
 Settlement Search uses the x402 protocol for instant micropayments:
 
-- **Base Price**: $0.05 USDC per search
+- **Base Price**: $0.05 PYUSD per search
 - **Scheduled Search**: +$0.05 (execute search at specific time)
 - **Email Notification**: +$0.05 (get results via email)
-- **Maximum Price**: $0.15 USDC (all features)
+- **Maximum Price**: $0.15 PYUSD (all features)
 
 ### Payment Flow
 
@@ -193,6 +215,12 @@ Get testnet funds:
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+## Socials
+- Lincoln Murr @murrlincoln (Telegram)
+- Ruohan Chen @ruohanchen (Telegram)
+- Hannah Wang @hannahw95 (Telegram)
+- Justin Yoo @Justinyoo17 (Telegram)
 
 ## 📄 License
 
