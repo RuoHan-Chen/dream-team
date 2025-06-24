@@ -2,7 +2,7 @@ require('dotenv').config()
 const express = require('express')
 const { createWalletClient, http } = require('viem')
 const { privateKeyToAccount } = require('viem/accounts')
-const { abi, bytecode } = require('./BooleanPredictionEscrow.json')
+const { abi, bytecode } = require('./flow.json')
 
 const app = express()
 const port = 4200
@@ -31,19 +31,11 @@ app.use(express.json())
 
 app.post('/api/create-market', async (req, res) => {
   try {
-    const { question, deadline } = req.body
-    if (!question || !deadline) {
-      return res.status(400).json({ error: 'Missing question or deadline' })
-    }
-
     const txHash = await client.deployContract({
       abi,
       bytecode,
       args: [
-        question,
-        BigInt(deadline),
-        process.env.ORACLE_ADDRESS,
-        process.env.STABLECOIN_ADDRESS
+        1e21
       ]
     })
     res.json({ status: 'pending', transactionHash: txHash })

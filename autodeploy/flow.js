@@ -20,7 +20,7 @@ const chainConfig = CHAIN_NAME === 'flowTestnet'
   : chains.sepolia
 
 // Contract address (deployed USDFWithLendingMVPIndexed)
-const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || "0x0447E99db48892c7A90966fC0143207365e83460"
+const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || "0x22295fF020405bfc1fF43F9bb7dD677842a34E47"
 
 // Wallet client setup
 const rawPK = process.env.DEPLOYER_PRIVATE_KEY
@@ -151,18 +151,29 @@ app.get('/api/balance-of', async (req, res) => {
       functionName: 'balanceOf',
       args: [agentAddy],
     })
-    const loanIds = await publicClient.readContract({
-      address: CONTRACT_ADDRESS,
-      abi,
-      functionName: 'userLoanIds',
-      args: [agentAddy],
-    })
-    res.json({ status: 'ok', balance: balance.toString(), loanIds })
+    res.json({ status: 'ok', balance: balance.toString() })
   } catch (err) {
     console.error('balance-of error:', err)
     res.status(500).json({ error: err.message })
   }
 })
+// 7) Next Loan ID endpoint
+app.get('/api/next-loan-id', async (req, res) => {
+    try {
+      // Assumes the contract exposes a public nextLoanId getter
+      const nextId = await publicClient.readContract({
+        address: CONTRACT_ADDRESS,
+        abi,
+        functionName: 'nextLoanId',
+        args: [],
+      })
+      res.json({ status: 'ok', nextLoanId: Number(nextId) })
+    } catch (err) {
+      console.error('next-loan-id error:', err)
+      res.status(500).json({ error: err.message })
+    }
+  })
+  
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port} (chain=${CHAIN_NAME})`)

@@ -1,6 +1,6 @@
 # Dream Market Lending API
 
-This service exposes a simple HTTP API for minting, lending, fast‑forwarding, withdrawing, and burning USDF tokens in a single-contract MVP. An AI “agent” can call these endpoints to manage escrowed stablecoins, simulate interest accrual, and handle collateral flows.
+This service exposes a simple HTTP API for minting, lending, fast‑forwarding, withdrawing, and burning USDF tokens in a single-contract MVP. An AI “agent” can call these endpoints to manage escrowed stablecoins, simulate interest accrual, and handle collateral flows. starts on index 2 use use-next-id to tell
 
 ---
 
@@ -41,14 +41,15 @@ This service exposes a simple HTTP API for minting, lending, fast‑forwarding, 
 
 Each endpoint listens on `http://localhost:$PORT/api/<route>` and uses JSON.
 
-| Route             | Method | Body Params       | Description                                                  |
-| ----------------- | ------ | ----------------- | ------------------------------------------------------------ |
-| `/api/mint`       | POST   | `amount` (number) | Mint `amount` USDF (in tokens, auto-converted to 1e18 units) |
-| `/api/lend`       | POST   | `amount` (number) | Lend `amount` from agent’s balance into the contract         |
-| `/api/add-year`   | POST   | `loanId` (number) | Fast-forward specified loan by one year (testing only)       |
-| `/api/unsend`     | POST   | `loanId` (number) | Withdraw principal + interest for a given loan               |
-| `/api/burn`       | POST   | `amount` (number) | Burn `amount` USDF from the agent’s balance                  |
-| `/api/balance-of` | GET    | *none*            | Read agent’s token balance and active loan IDs               |
+| Route               | Method | Body Params       | Description                                                  |
+| ------------------- | ------ | ----------------- | ------------------------------------------------------------ |
+| `/api/mint`         | POST   | `amount` (number) | Mint `amount` USDF (in tokens, auto-converted to 1e18 units) |
+| `/api/lend`         | POST   | `amount` (number) | Lend `amount` from agent’s balance into the contract         |
+| `/api/add-year`     | POST   | `loanId` (number) | Fast-forward specified loan by one year (testing only)       |
+| `/api/unsend`       | POST   | `loanId` (number) | Withdraw principal + interest for a given loan               |
+| `/api/burn`         | POST   | `amount` (number) | Burn `amount` USDF from the agent’s balance                  |
+| \$1                 |        |                   |                                                              |
+| `/api/next-loan-id` | GET    | *none*            | Read the next available loan ID for new lending operations   |
 
 ### JSON Response Format
 
@@ -63,7 +64,7 @@ Each endpoint listens on `http://localhost:$PORT/api/<route>` and uses JSON.
 
 ## Curl Examples
 
-```bash
+````bash
 # 1) Mint 1,000 USDF
 ec=1000 tokens => 1000 * 1e18 units
 curl -X POST http://localhost:4202/api/mint \
@@ -91,40 +92,12 @@ curl -X POST http://localhost:4202/api/burn \
   -d '{"amount":1000}'
 
 # 6) Query agent balance & loans
+```bash
 curl http://localhost:4202/api/balance-of
+````
+
+# 7) Read next loan ID
+
+```bash
+curl http://localhost:4202/api/next-loan-id
 ```
-
----
-
-## Example Agent Workflow
-
-An AI agent automates the following sequence for a new market:
-
-1. **Mint & escrow** 5,000 USDF to the agent:
-
-   ```bash
-   curl -X POST /api/mint -d '{"amount":5000}'
-   ```
-2. **Lend** the full 5,000 for yield:
-
-   ```bash
-   curl -X POST /api/lend -d '{"amount":5000}'
-   ```
-3. **Wait** for market resolution...
-4. **Fast-forward** the loan to accrue one year interest:
-
-   ```bash
-   curl -X POST /api/add-year -d '{"loanId":1}'
-   ```
-5. **Withdraw** principal + interest:
-
-   ```bash
-   curl -X POST /api/unsend -d '{"loanId":1}'
-   ```
-6. **Burn** the original 5,000 principal, leaving only profit in circulation:
-
-   ```bash
-   curl -X POST /api/burn -d '{"amount":5000}'
-   ```
-
-The agent can loop this workflow for multiple users/markets by tracking `loanId`s returned on each `lend` call.\`\`\`
