@@ -2,28 +2,6 @@
 
 A multi-source AI-powered search application with x402 micropayments and SIWE authentication. Search across multiple providers (Exa, Perplexity, Brave Search, Tavily) and get AI-generated summaries - all powered by cryptocurrency micropayments.
 
-# Flow Blockchain Integration
-
-Locked PYUSD is bridged from the betting escrow contract to Flow Testnet to earn yield.
-
-## User Flow
-
-1. **Place Bet**  
-   Users stake PYUSD into the escrow contract.
-
-2. **Bridge & Lend**  
-   Escrowed PYUSD is bridged to Flow Testnet and lent out to earn yield.
-
-3. **Resolve Market**  
-   Once the outcome is determined, the market is resolved.
-
-4. **Unlend & Return**  
-   Lent PYUSD is unbridged back to the escrow contract.
-
-5. **Distribute Funds**  
-   Users receive their original stake plus any earned yield.
-
-
 ## 🌟 Features
 
 - **Multi-Source Search**: Queries Exa, Perplexity, Brave Search, and Tavily simultaneously
@@ -33,7 +11,6 @@ Locked PYUSD is bridged from the betting escrow contract to Flow Testnet to earn
 - **Scheduled Queries**: Schedule searches for future execution
 - **Email Notifications**: Get results delivered to your inbox
 - **Dynamic Pricing**: $0.05 base + $0.05 for scheduling + $0.05 for email notifications
-- **Flow + PYUSD **: Built on the Flow blockchain and uses PYUSD transactions
 
 ## 🛠️ Tech Stack
 
@@ -217,7 +194,7 @@ Get testnet funds:
 5. Open a Pull Request
 
 ## Socials
-- Lincoln Murr @murrlincoln (Telegram)
+- Lincoln Murr @murrlincoln (Twitter)
 - Ruohan Chen @ruohanchen (Telegram)
 - Hannah Wang @hannahw95 (Telegram)
 - Justin Yoo @Justinyoo17 (Telegram)
