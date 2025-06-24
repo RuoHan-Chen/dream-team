@@ -25,11 +25,11 @@ This service exposes a simple HTTP API for minting, lending, fast‑forwarding, 
    USER2_PRIVATE_KEY=ba267688182c517cd4ad41b2e67aba6e2258816cb816e189f720c93ffefcc885
 
    # Network configuration
-   CHAIN=sepolia             # or flowTestnet
+   CHAIN=flowTestnet              
    RPC_URL=https://sepolia.infura.io/v3/0ac6b5c1a7be46118d0c3968e7d9e82a
 
    # Contract and agent addresses
-   CONTRACT_ADDRESS=0x1b393b624F94D04d9dFa92ed2201B197A8620CE7
+   CONTRACT_ADDRESS=0x22295fF020405bfc1fF43F9bb7dD677842a34E47
    AGENT_ADDRESS=0x6DcdF2D57F55953ee170373bdb41b749a645C91e
 
    PORT=4202                # optional
