@@ -50,10 +50,14 @@ body {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 120px 20px 20px;
+  padding: 20px;
   background-color: transparent;
   position: relative;
   z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 /* Button Styles */
@@ -112,60 +116,15 @@ body {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   position: relative;
   overflow-x: hidden;
-}
-
-/* Taskbar */
-.taskbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  z-index: 100;
-}
-
-.taskbar-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.taskbar-logo img {
-  width: 24px;
-  height: 24px;
-}
-
-.taskbar-title {
-  color: #f0f0f0;
-  font-size: 1.2rem;
-  font-weight: 600;
-  font-family: 'Roboto Mono', monospace;
-}
-
-.taskbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 15px;
+  flex-direction: column;
 }
 
 /* Main Content */
 .main-content {
-  padding-top: 80px;
+  padding-top: 20px;
   padding-bottom: 20px;
-  min-height: calc(100vh - 80px);
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
+  min-height: 100vh;
 }
 
 /* Loading Container */
@@ -236,6 +195,27 @@ body {
   white-space: nowrap;
 }
 
+.connect-btn {
+  background-color: rgba(103, 111, 255, 0.15);
+  color: #ffffff;
+  border: 1px solid rgba(103, 111, 255, 0.3);
+  padding: 0 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  font-family: 'Roboto Mono', monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 36px;
+  min-width: 110px;
+  gap: 6px;
+  box-shadow: 0 0 8px rgba(103, 111, 255, 0.2);
+}
+
 .wallet-button {
   background-color: rgba(103, 111, 255, 0.1);
   color: #f0f0f0;
@@ -255,73 +235,6 @@ body {
   border-color: rgba(103, 111, 255, 0.3);
   transform: translateY(-1px);
   box-shadow: 0 2px 10px rgba(103, 111, 255, 0.2);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .taskbar {
-    padding: 0 15px;
-  }
-  
-  .taskbar-title {
-    font-size: 1rem;
-  }
-  
-  .main-content {
-    padding-top: 70px;
-  }
-  
-  .container {
-    padding: 0 15px;
-  }
-  
-  .intro-title {
-    font-size: 2rem;
-  }
-  
-  .intro-tagline {
-    font-size: 1rem;
-  }
-  
-  .search-box {
-    flex-direction: column;
-  }
-  
-  .tabs {
-    flex-wrap: wrap;
-  }
-  
-  .tab-button {
-    flex: 1;
-    min-width: 120px;
-  }
-}
-
-@media (max-width: 480px) {
-  .taskbar {
-    height: 50px;
-  }
-  
-  .taskbar-logo img {
-    width: 24px;
-    height: 24px;
-  }
-  
-  .taskbar-title {
-    font-size: 0.9rem;
-  }
-  
-  .main-content {
-    padding-top: 60px;
-  }
-  
-  .intro-title {
-    font-size: 1.5rem;
-  }
-  
-  .intro-tagline {
-    font-size: 0.9rem;
-  }
 }
 
 /* Header */
@@ -488,77 +401,178 @@ header p {
 .search-section {
   max-width: 800px;
   margin: 0 auto;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s ease-out;
+}
+
+.search-section.fade-in {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .search-box {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 15px;
+  margin-bottom: 30px;
 }
 
 .search-input {
   flex: 1;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.08);
   color: #f0f0f0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 12px 16px;
-  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 16px 20px;
+  border-radius: 12px;
   font-size: 16px;
   font-family: 'Roboto Mono', monospace;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: rgba(103, 111, 255, 0.5);
-  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(103, 111, 255, 0.4);
+  background-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 25px rgba(103, 111, 255, 0.2);
+  transform: translateY(-1px);
 }
 
 .search-input:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
+}
+
+.search-input::placeholder {
+  color: rgba(240, 240, 240, 0.6);
+  font-family: 'Roboto Mono', monospace;
 }
 
 .search-options {
-  margin-bottom: 20px;
+  margin-bottom: 30px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
 }
 
 .option {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.option:last-child {
+  margin-bottom: 0;
 }
 
 .option label {
   color: #f0f0f0;
   font-family: 'Roboto Mono', monospace;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.3s ease;
+}
+
+.option label:hover {
+  color: #ffffff;
+}
+
+/* Custom checkbox styling */
+.option input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.option input[type="checkbox"]:checked {
+  background-color: rgba(103, 111, 255, 0.3);
+  border-color: rgba(103, 111, 255, 0.5);
+  box-shadow: 0 0 15px rgba(103, 111, 255, 0.3);
+}
+
+.option input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.option input[type="checkbox"]:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.option input[type="checkbox"]:checked:hover {
+  border-color: rgba(103, 111, 255, 0.6);
+  box-shadow: 0 0 20px rgba(103, 111, 255, 0.4);
 }
 
 .schedule-inputs {
-  margin-left: 20px;
-  margin-top: 10px;
+  margin-left: 32px;
+  margin-top: 15px;
+  padding: 15px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
 }
 
 .schedule-input {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.08);
   color: #f0f0f0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 8px 12px;
-  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 12px 16px;
+  border-radius: 8px;
   font-size: 14px;
   font-family: 'Roboto Mono', monospace;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+  width: 100%;
+  margin-bottom: 10px;
 }
 
 .schedule-input:focus {
   outline: none;
-  border-color: rgba(103, 111, 255, 0.5);
+  border-color: rgba(103, 111, 255, 0.4);
+  background-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 20px rgba(103, 111, 255, 0.2);
+  transform: translateY(-1px);
 }
 
 .schedule-input:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
+}
+
+.schedule-input::placeholder {
+  color: rgba(240, 240, 240, 0.6);
+  font-family: 'Roboto Mono', monospace;
+}
+
+.schedule-input:last-child {
+  margin-bottom: 0;
 }
 
 .price-label {
@@ -751,158 +765,38 @@ footer a:hover {
   cursor: not-allowed;
 }
 
-.market-button {
-  width: 100%;
-  background-color: rgba(103, 111, 255, 0.15);
-  color: #ffffff;
-  border: 1px solid rgba(103, 111, 255, 0.3);
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-size: 16px;
+/* Style datetime-local input calendar icon */
+.market-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(0.8);
   cursor: pointer;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  font-family: 'Roboto Mono', monospace;
-  box-shadow: 0 0 12px rgba(103, 111, 255, 0.2);
-  margin-top: 10px;
 }
 
-.market-button:hover:not(:disabled) {
-  background-color: rgba(103, 111, 255, 0.25);
-  border-color: rgba(103, 111, 255, 0.4);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(103, 111, 255, 0.3);
+.market-input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  filter: invert(1) brightness(1);
+  transform: scale(1.1);
 }
 
-.market-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+/* Firefox datetime-local styling */
+.market-input[type="datetime-local"]::-moz-calendar-picker-indicator {
+  filter: invert(1) brightness(0.8);
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.market-result {
-  background-color: rgba(40, 167, 69, 0.1);
-  border: 1px solid rgba(40, 167, 69, 0.3);
-  border-radius: 10px;
-  padding: 20px;
-  margin-top: 20px;
-  backdrop-filter: blur(10px);
+.market-input[type="datetime-local"]::-moz-calendar-picker-indicator:hover {
+  filter: invert(1) brightness(1);
+  transform: scale(1.1);
 }
 
-.market-result h4 {
-  color: #a5f3a5;
-  margin-bottom: 15px;
-  font-family: 'Roboto Mono', monospace;
-}
-
-.market-details {
-  font-family: 'Roboto Mono', monospace;
-}
-
-.market-details p {
-  color: #d0d0d0;
-  margin-bottom: 8px;
-  word-break: break-all;
-}
-
-.market-details code {
-  background-color: rgba(255, 255, 255, 0.1);
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-family: 'Roboto Mono', monospace;
-  font-size: 14px;
-}
-
-.market-status-check {
-  margin-top: 40px;
-  padding-top: 40px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.market-status-check h4 {
-  color: #f0f0f0;
-  margin-bottom: 20px;
-  font-family: 'Roboto Mono', monospace;
-}
-
-.status-form {
+.market-status-checker {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
 }
 
-.status-form input {
+.market-status-checker input {
   flex: 1;
-}
-
-.status-button {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #f0f0f0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  font-family: 'Roboto Mono', monospace;
-}
-
-.status-button:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
-}
-
-.status-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.market-status {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  padding: 20px;
-  backdrop-filter: blur(10px);
-}
-
-.market-status h5 {
-  color: #f0f0f0;
-  margin-bottom: 15px;
-  font-family: 'Roboto Mono', monospace;
-}
-
-.status-details {
-  font-family: 'Roboto Mono', monospace;
-}
-
-.status-details p {
-  color: #d0d0d0;
-  margin-bottom: 10px;
-}
-
-.status-details strong {
-  color: #f0f0f0;
-}
-
-.market-summary {
-  background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  padding: 15px;
-  margin-top: 15px;
-}
-
-.market-summary p:first-child {
-  margin-bottom: 10px;
-}
-
-.market-error {
-  color: #fca5a5;
-  background-color: rgba(220, 53, 69, 0.1);
-  border: 1px solid rgba(220, 53, 69, 0.3);
-  border-radius: 5px;
-  padding: 10px;
-  margin-top: 10px;
 }
 
 .divider {
@@ -940,156 +834,6 @@ footer a:hover {
 .status-badge.status-failed {
   background-color: rgba(220, 53, 69, 0.2);
   color: #dc3545;
-}
-
-/* Market Tabs */
-.market-tabs {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 30px;
-  justify-content: center;
-}
-
-.market-tab {
-  background-color: rgba(255, 255, 255, 0.05);
-  color: #f0f0f0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  font-family: 'Roboto Mono', monospace;
-}
-
-.market-tab:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
-}
-
-.market-tab.active {
-  background-color: rgba(103, 111, 255, 0.15);
-  border-color: rgba(103, 111, 255, 0.3);
-  color: #ffffff;
-  box-shadow: 0 0 15px rgba(103, 111, 255, 0.2);
-}
-
-/* Markets Browse View */
-.markets-browse {
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-.no-markets {
-  text-align: center;
-  color: #a0a0a0;
-  padding: 40px;
-  font-family: 'Roboto Mono', monospace;
-}
-
-.markets-list {
-  display: grid;
-  gap: 20px;
-}
-
-.market-card {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  padding: 20px;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-}
-
-.market-card:hover {
-  background-color: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1);
-}
-
-.market-card.own-market {
-  border-color: rgba(103, 111, 255, 0.3);
-  background-color: rgba(103, 111, 255, 0.05);
-}
-
-.market-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 15px;
-}
-
-.market-header h4 {
-  color: #f0f0f0;
-  margin: 0;
-  font-family: 'Roboto Mono', monospace;
-  font-size: 1.1rem;
-  flex: 1;
-}
-
-.own-badge {
-  background-color: rgba(103, 111, 255, 0.2);
-  color: #a5b3ff;
-  padding: 4px 10px;
-  border-radius: 15px;
-  font-size: 12px;
-  font-family: 'Roboto Mono', monospace;
-  white-space: nowrap;
-}
-
-.market-info {
-  font-family: 'Roboto Mono', monospace;
-  margin-bottom: 15px;
-}
-
-.market-info p {
-  color: #d0d0d0;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.market-info code {
-  background-color: rgba(255, 255, 255, 0.1);
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-family: 'Roboto Mono', monospace;
-  font-size: 12px;
-  word-break: break-all;
-}
-
-.market-result-summary {
-  background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
-  padding: 10px;
-  margin-top: 10px;
-}
-
-.market-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-.view-details-btn {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #f0f0f0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  font-family: 'Roboto Mono', monospace;
-}
-
-.view-details-btn:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
 }
 
 /* Twinkling Stars Animation */
@@ -1348,6 +1092,8 @@ h1, h2, h3, h4, h5, h6, p, span, div, label {
   z-index: 1;
   min-height: 100vh;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  display: flex;
+  flex-direction: column;
 }
 
 /* Pulsing Stars */
@@ -1376,19 +1122,28 @@ h1, h2, h3, h4, h5, h6, p, span, div, label {
 /* Welcome Section */
 .welcome-section {
   text-align: center;
-  margin-top: 60px;
-  margin-bottom: 40px;
-  padding: 40px 0;
+  margin: 0 auto;
+  padding: 20px 0 40px 0;
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(30px);
   transition: all 0.8s ease-out;
   position: relative;
   z-index: 2;
+  max-width: 100%;
+  pointer-events: none;
 }
 
 .welcome-section.fade-in {
   opacity: 1;
   transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* When intro is active, ensure home content is hidden */
+.App.intro-active .welcome-section:not(.fade-in) {
+  opacity: 0;
+  transform: translateY(30px);
+  pointer-events: none;
 }
 
 .welcome-title {
@@ -1417,10 +1172,11 @@ h1, h2, h3, h4, h5, h6, p, span, div, label {
   gap: 24px;
   margin-bottom: 40px;
   opacity: 0;
-  transform: translateY(30px);
+  transform: translateY(40px);
   transition: all 1s ease-out 0.3s;
   position: relative;
   z-index: 2;
+  max-width: 100%;
 }
 
 .action-grid.fade-in {
@@ -1623,4 +1379,1185 @@ h1, h2, h3, h4, h5, h6, p, span, div, label {
   overflow-x: auto;
   white-space: pre-wrap;
   word-wrap: break-word;
+}
+
+/* Market Tabs */
+.market-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+  justify-content: center;
+}
+
+.market-tab {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #f0f0f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  font-family: 'Roboto Mono', monospace;
+}
+
+.market-tab:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.market-tab.active {
+  background-color: rgba(103, 111, 255, 0.15);
+  border-color: rgba(103, 111, 255, 0.3);
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(103, 111, 255, 0.2);
+}
+
+/* Markets Browse View */
+.markets-browse {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.no-markets {
+  text-align: center;
+  color: #a0a0a0;
+  padding: 40px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.markets-list {
+  display: grid;
+  gap: 20px;
+}
+
+.market-card {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.market-card:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1);
+}
+
+.market-card.own-market {
+  border-color: rgba(103, 111, 255, 0.3);
+  background-color: rgba(103, 111, 255, 0.05);
+}
+
+.market-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.market-header h4 {
+  color: #f0f0f0;
+  margin: 0;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 1.1rem;
+  flex: 1;
+}
+
+.own-badge {
+  background-color: rgba(103, 111, 255, 0.2);
+  color: #a5b3ff;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-family: 'Roboto Mono', monospace;
+  white-space: nowrap;
+}
+
+.market-info {
+  font-family: 'Roboto Mono', monospace;
+  margin-bottom: 15px;
+}
+
+.market-info p {
+  color: #d0d0d0;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.market-info code {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.market-result-summary {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.market-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.view-details-btn {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #f0f0f0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  font-family: 'Roboto Mono', monospace;
+}
+
+.view-details-btn:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-content {
+    padding-top: 70px;
+  }
+  
+  .container {
+    padding: 0 15px;
+  }
+  
+  .intro-title {
+    font-size: 2rem;
+  }
+  
+  .intro-tagline {
+    font-size: 1rem;
+  }
+  
+  .search-box {
+    flex-direction: column;
+  }
+  
+  .tabs {
+    flex-wrap: wrap;
+  }
+  
+  .tab-button {
+    flex: 1;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding-top: 60px;
+  }
+  
+  .intro-title {
+    font-size: 1.5rem;
+  }
+  
+  .intro-tagline {
+    font-size: 0.9rem;
+  }
+}
+
+/* Ensure body doesn't scroll when intro is active */
+body.intro-active {
+  overflow: hidden;
+}
+
+/* Ensure content is properly positioned */
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.App.intro-active {
+  overflow: hidden;
+}
+
+/* Home Wallet Connection */
+.home-wallet-connect {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: all 0.6s ease-out 0.5s;
+  pointer-events: none;
+}
+
+.home-wallet-connect.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* When intro is active, ensure wallet connection is hidden */
+.App.intro-active .home-wallet-connect:not(.fade-in) {
+  opacity: 0;
+  transform: translateY(-20px);
+  pointer-events: none;
+}
+
+.home-connect-btn {
+  background-color: rgba(103, 111, 255, 0.15);
+  color: #ffffff;
+  border: 1px solid rgba(103, 111, 255, 0.3);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  font-family: 'Roboto Mono', monospace;
+  box-shadow: 0 0 12px rgba(103, 111, 255, 0.2);
+  min-width: 120px;
+}
+
+.home-connect-btn:hover {
+  background-color: rgba(103, 111, 255, 0.25);
+  border-color: rgba(103, 111, 255, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(103, 111, 255, 0.3);
+}
+
+.home-wallet-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-wallet-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.1);
+}
+
+.home-status-dot.connected {
+  width: 8px;
+  height: 8px;
+  background-color: #4ade80;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.home-wallet-address {
+  color: #f0f0f0;
+  font-size: 12px;
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 500;
+}
+
+.home-disconnect-btn {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 500;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.1);
+}
+
+.home-disconnect-btn:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.2);
+}
+
+/* Responsive design for home wallet connection */
+@media (max-width: 768px) {
+  .home-wallet-connect {
+    top: 15px;
+    right: 15px;
+  }
+  
+  .home-connect-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-width: 100px;
+  }
+  
+  .home-wallet-status {
+    padding: 6px 10px;
+  }
+  
+  .home-wallet-address {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-wallet-connect {
+    top: 10px;
+    right: 10px;
+  }
+  
+  .home-connect-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+    min-width: 90px;
+  }
+}
+
+/* Ensure body doesn't scroll when intro is active */
+body.intro-active {
+  overflow: hidden;
+}
+
+/* Market Tabs Transition */
+.market-tabs-transition {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  backdrop-filter: blur(10px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.market-tabs-container {
+  text-align: center;
+  max-width: 500px;
+  padding: 40px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+  animation: slideUp 0.4s ease-out;
+}
+
+.market-tabs-container h2 {
+  color: #ffffff;
+  font-size: 1.8rem;
+  margin-bottom: 30px;
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 500;
+}
+
+.market-tabs-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.market-tab-btn {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #f0f0f0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 500;
+  min-width: 200px;
+}
+
+.market-tab-btn:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.15);
+}
+
+.market-tab-btn.browse-btn {
+  background-color: rgba(103, 111, 255, 0.15);
+  border-color: rgba(103, 111, 255, 0.3);
+  color: #ffffff;
+}
+
+.market-tab-btn.browse-btn:hover {
+  background-color: rgba(103, 111, 255, 0.25);
+  border-color: rgba(103, 111, 255, 0.4);
+  box-shadow: 0 8px 25px rgba(103, 111, 255, 0.2);
+}
+
+.market-tab-btn.create-btn {
+  background-color: rgba(76, 175, 80, 0.15);
+  border-color: rgba(76, 175, 80, 0.3);
+  color: #ffffff;
+}
+
+.market-tab-btn.create-btn:hover {
+  background-color: rgba(76, 175, 80, 0.25);
+  border-color: rgba(76, 175, 80, 0.4);
+  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.2);
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #a0a0a0;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.back-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #f0f0f0;
+  transform: translateX(-2px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive design for market tabs transition */
+@media (max-width: 768px) {
+  .market-tabs-container {
+    padding: 30px 20px;
+    margin: 20px;
+  }
+  
+  .market-tabs-container h2 {
+    font-size: 1.5rem;
+  }
+  
+  .market-tab-btn {
+    padding: 14px 20px;
+    font-size: 15px;
+    min-width: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .market-tabs-container {
+    padding: 25px 15px;
+    margin: 15px;
+  }
+  
+  .market-tabs-container h2 {
+    font-size: 1.3rem;
+  }
+  
+  .market-tab-btn {
+    padding: 12px 18px;
+    font-size: 14px;
+    min-width: 160px;
+  }
+}
+
+/* Also style the schedule input datetime-local */
+.schedule-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(0.8);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.schedule-input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  filter: invert(1) brightness(1);
+  transform: scale(1.1);
+}
+
+.schedule-input[type="datetime-local"]::-moz-calendar-picker-indicator {
+  filter: invert(1) brightness(0.8);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.schedule-input[type="datetime-local"]::-moz-calendar-picker-indicator:hover {
+  filter: invert(1) brightness(1);
+  transform: scale(1.1);
+}
+
+/* Market Details Overlay */
+.market-details-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.market-details-container {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.1);
+  animation: slideUp 0.4s ease-out;
+}
+
+.market-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.market-details-header h2 {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-family: 'Roboto Mono', monospace;
+  margin: 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #a0a0a0;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.market-details-content {
+  padding: 30px;
+}
+
+.market-info-section {
+  margin-bottom: 30px;
+}
+
+.market-info-section h3 {
+  color: #ffffff;
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.market-meta p {
+  color: #d0d0d0;
+  margin-bottom: 8px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.market-meta code {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 12px;
+}
+
+/* Odds Section */
+.odds-section {
+  margin-bottom: 30px;
+}
+
+.odds-section h3 {
+  color: #ffffff;
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.odds-display {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.odds-card {
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  backdrop-filter: blur(15px);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.odds-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+}
+
+.odds-card.true-odds {
+  border-color: rgba(76, 175, 80, 0.3);
+  background-color: rgba(76, 175, 80, 0.05);
+}
+
+.odds-card.false-odds {
+  border-color: rgba(239, 68, 68, 0.3);
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+.odds-card.true-odds.selected {
+  border-color: rgba(76, 175, 80, 0.6);
+  background-color: rgba(76, 175, 80, 0.15);
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+  transform: translateY(-2px);
+}
+
+.odds-card.false-odds.selected {
+  border-color: rgba(239, 68, 68, 0.6);
+  background-color: rgba(239, 68, 68, 0.15);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+  transform: translateY(-2px);
+}
+
+.odds-card.true-odds:hover {
+  border-color: rgba(76, 175, 80, 0.5);
+  background-color: rgba(76, 175, 80, 0.1);
+  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.2);
+}
+
+.odds-card.false-odds:hover {
+  border-color: rgba(239, 68, 68, 0.5);
+  background-color: rgba(239, 68, 68, 0.1);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.2);
+}
+
+.odds-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #a0a0a0;
+  margin-bottom: 8px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.odds-value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 8px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.odds-payout {
+  display: block;
+  font-size: 12px;
+  color: #a0a0a0;
+  font-family: 'Roboto Mono', monospace;
+}
+
+/* Betting Section */
+.betting-section {
+  margin-bottom: 30px;
+}
+
+.betting-section h3 {
+  color: #ffffff;
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.betting-form {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  backdrop-filter: blur(15px);
+}
+
+.bet-amount-input {
+  margin-bottom: 20px;
+}
+
+.bet-amount-input label {
+  display: block;
+  color: #f0f0f0;
+  margin-bottom: 8px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 14px;
+}
+
+.bet-input {
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #f0f0f0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: 'Roboto Mono', monospace;
+  backdrop-filter: blur(15px);
+  transition: all 0.3s ease;
+}
+
+.bet-input:focus {
+  outline: none;
+  border-color: rgba(103, 111, 255, 0.4);
+  background-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 20px rgba(103, 111, 255, 0.2);
+}
+
+.bet-input::placeholder {
+  color: rgba(240, 240, 240, 0.6);
+}
+
+.place-bet-btn {
+  width: 100%;
+  background-color: rgba(103, 111, 255, 0.2);
+  color: #ffffff;
+  border: 1px solid rgba(103, 111, 255, 0.3);
+  padding: 14px 20px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(15px);
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 500;
+}
+
+.place-bet-btn:hover:not(:disabled) {
+  background-color: rgba(103, 111, 255, 0.3);
+  border-color: rgba(103, 111, 255, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(103, 111, 255, 0.3);
+}
+
+.place-bet-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Betting History Section */
+.betting-history-section {
+  margin-bottom: 20px;
+}
+
+.betting-history-section h3 {
+  color: #ffffff;
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.betting-history {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  backdrop-filter: blur(15px);
+}
+
+.no-bets {
+  color: #a0a0a0;
+  text-align: center;
+  font-family: 'Roboto Mono', monospace;
+  font-style: italic;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.bet-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.bet-user {
+  color: #a0a0a0;
+  font-size: 12px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.bet-outcome {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'Roboto Mono', monospace;
+  text-transform: uppercase;
+}
+
+.bet-outcome.true {
+  background-color: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+}
+
+.bet-outcome.false {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #f44336;
+}
+
+.bet-amount {
+  color: #f0f0f0;
+  font-weight: 500;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.bet-time {
+  color: #a0a0a0;
+  font-size: 11px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .market-details-container {
+    width: 95%;
+    max-height: 95vh;
+  }
+  
+  .market-details-content {
+    padding: 20px;
+  }
+  
+  .odds-display {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .outcome-selection {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .bet-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .history-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+/* Query History Styles */
+.history-section {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.history-section h3 {
+  color: #f0f0f0;
+  margin-bottom: 20px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 1.3rem;
+}
+
+.query-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.query-item.history-item {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  backdrop-filter: blur(15px);
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+.query-item.history-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  gap: 15px;
+}
+
+.history-query {
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0;
+  font-family: 'Roboto Mono', monospace;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.history-status {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'Roboto Mono', monospace;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.history-status.status-completed {
+  background-color: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.history-status.status-pending {
+  background-color: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.history-status.status-running {
+  background-color: rgba(33, 150, 243, 0.2);
+  color: #2196f3;
+  border: 1px solid rgba(33, 150, 243, 0.3);
+}
+
+.history-status.status-failed {
+  background-color: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.history-details {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 15px;
+}
+
+.history-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.5;
+}
+
+.meta-label {
+  color: #a0a0a0;
+  font-weight: 500;
+  font-size: 14px;
+  font-family: 'Roboto Mono', monospace;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.meta-value {
+  color: #d0d0d0;
+  font-size: 14px;
+  font-family: 'Roboto Mono', monospace;
+  flex: 1;
+  word-break: break-word;
+}
+
+/* Responsive Design for History */
+@media (max-width: 768px) {
+  .history-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .history-status {
+    align-self: flex-start;
+  }
+  
+  .meta-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .meta-label {
+    min-width: auto;
+  }
+}
+
+/* Market creation loading */
+.market-creation-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin: 20px 0;
+}
+
+.market-creation-loading .loading-container {
+  text-align: center;
+  color: white;
+}
+
+.market-creation-loading .loading-subtitle {
+  font-size: 14px;
+  opacity: 0.7;
+  margin-top: 5px;
+}
+
+/* Search loading */
+.search-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin: 20px 0;
+}
+
+.search-loading .loading-container {
+  text-align: center;
+  color: white;
+}
+
+.search-loading .loading-subtitle {
+  font-size: 14px;
+  opacity: 0.7;
+  margin-top: 5px;
+}
+
+/* Market form */
+.query-item.history-item.compact {
+  padding: 12px 16px;
+  min-height: unset;
+  margin-bottom: 0;
+}
+
+.history-header.compact {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+.history-header.compact .history-query {
+  font-size: 1rem;
+  margin-bottom: 0;
+  margin-right: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.history-header.compact .history-status {
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.history-date-inline {
+  color: #a0a0a0;
+  font-size: 13px;
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 400;
+  opacity: 0.85;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.query-item.history-item.compact .history-details {
+  padding-top: 6px;
+  clear: both;
+}
+
+.query-item.history-item.compact .meta-item {
+  margin-bottom: 0;
 }

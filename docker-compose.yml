@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    volumes:
+      - ./:/app
+      - ./node_modules:/app/node_modules
+    depends_on:
+      - frontend
+  frontend:
+    build:
+      context: ./client-react
+      dockerfile: Dockerfile
+    env_file:
+      - ./client-react/.env.local
+    ports:
+      - "5173:80"
+    restart: unless-stopped
+    volumes:
+      - ./client-react:/app
+      - ./client-react/node_modules:/app/node_modules 
