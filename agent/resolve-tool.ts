@@ -10,6 +10,30 @@ import { config } from 'dotenv';
 config({ path: '../.env' }); // Load from parent directory
 config({ path: '.env' }); // Also try local directory
 
+// Flow testnet chain configuration
+const flowTestnet = {
+  id: 545,
+  name: 'Flow EVM Testnet',
+  network: 'flowTestnet',
+  nativeCurrency: {
+    name: 'Flow',
+    symbol: 'FLOW',
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://testnet.evm.nodes.onflow.org'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Flowscan',
+      url: 'https://evm-testnet.flowscan.io',
+    },
+  },
+  testnet: true,
+} as const;
+
 // Contract ABI - only including the functions we need
 const escrowABI = parseAbi([
   'function resolveAndDistribute(bool outcome) external',
@@ -26,9 +50,9 @@ const escrowABI = parseAbi([
 // Create the resolve tool
 export const resolveTool = tool({
   name: 'resolve_escrow',
-  description: 'Resolve a boolean prediction escrow contract on Ethereum Sepolia by calling resolveAndDistribute. Only the oracle can call this function.',
+  description: 'Resolve a boolean prediction escrow contract on Flow EVM Testnet by calling resolveAndDistribute. Only the oracle can call this function.',
   parameters: z.object({
-    contractAddress: z.string().describe('The address of the escrow contract on Sepolia'),
+    contractAddress: z.string().describe('The address of the escrow contract on Flow testnet'),
     outcome: z.boolean().describe('The resolution outcome - true or false'),
     privateKey: z.string().nullable().describe('Oracle\'s private key (hex format with 0x prefix). Pass null to use ORACLE_PRIVATE_KEY env var'),
   }),
@@ -58,14 +82,14 @@ export const resolveTool = tool({
       // Create wallet client for sending transactions
       const walletClient = createWalletClient({
         account,
-        chain: sepolia,
-        transport: http(process.env.SEPOLIA_RPC_URL),
+        chain: flowTestnet,
+        transport: http(process.env.FLOW_RPC_URL || flowTestnet.rpcUrls.default.http[0]),
       });
 
       // Create public client for reading contract state
       const publicClient = createPublicClient({
-        chain: sepolia,
-        transport: http(process.env.SEPOLIA_RPC_URL),
+        chain: flowTestnet,
+        transport: http(process.env.FLOW_RPC_URL || flowTestnet.rpcUrls.default.http[0]),
       });
 
       // Get contract instance
@@ -124,7 +148,7 @@ export const resolveTool = tool({
 - False Bets: ${Number(totalFalse) / 1e6} USDC
 - Winners: Those who bet ${outcome ? 'TRUE' : 'FALSE'} will receive their proportional share
 
-View on Etherscan: https://sepolia.etherscan.io/tx/${hash}`;
+View on Flowscan: ${flowTestnet.blockExplorers.default.url}/tx/${hash}`;
       } else {
         return `Transaction failed. Hash: ${hash}`;
       }
@@ -147,16 +171,16 @@ View on Etherscan: https://sepolia.etherscan.io/tx/${hash}`;
 // Export a function to get contract info
 export const getContractInfoTool = tool({
   name: 'get_escrow_info',
-  description: 'Get information about a boolean prediction escrow contract on Ethereum Sepolia',
+  description: 'Get information about a boolean prediction escrow contract on Flow EVM Testnet',
   parameters: z.object({
-    contractAddress: z.string().describe('The address of the escrow contract on Sepolia'),
+    contractAddress: z.string().describe('The address of the escrow contract on Flow testnet'),
   }),
   async execute({ contractAddress }) {
     try {
       // Create public client for reading
       const publicClient = createPublicClient({
-        chain: sepolia,
-        transport: http(process.env.SEPOLIA_RPC_URL),
+        chain: flowTestnet,
+        transport: http(process.env.FLOW_RPC_URL || flowTestnet.rpcUrls.default.http[0]),
       });
 
       // Get contract instance for reading

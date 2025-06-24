@@ -220,4 +220,23 @@ export const api = {
     const response = await apiClient.get("/api/markets");
     return response.data;
   },
+
+  resolveAllMarkets: async (): Promise<{
+    message: string;
+    totalMarkets: number;
+    successCount: number;
+    failureCount: number;
+    results: Array<{
+      market: string;
+      question: string;
+      success: boolean;
+      outcome?: boolean;
+      txHash?: string;
+      error?: string;
+    }>;
+  }> => {
+    console.log("🔧 Resolving all outstanding markets");
+    const response = await apiClient.post("/api/admin/resolve-all-markets");
+    return response.data;
+  },
 }; 

@@ -47,6 +47,8 @@ function App() {
   const [marketOdds, setMarketOdds] = useState({ true: 0, false: 0 });
   const [marketCreationLoading, setMarketCreationLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [resolvingMarkets, setResolvingMarkets] = useState(false);
+  const [resolutionResults, setResolutionResults] = useState<any>(null);
   
   // Animation states
   const [stars, setStars] = useState<Star[]>([]);
@@ -551,6 +553,32 @@ function App() {
     setMarketOdds({ true: 0, false: 0 });
   };
 
+  const handleResolveAllMarkets = async () => {
+    setResolvingMarkets(true);
+    setError(null);
+    setSuccess(null);
+    setResolutionResults(null);
+
+    try {
+      const result = await api.resolveAllMarkets();
+      
+      if (result.totalMarkets === 0) {
+        setSuccess("No markets are ready for resolution");
+      } else {
+        setSuccess(`Resolved ${result.successCount} of ${result.totalMarkets} markets successfully`);
+        setResolutionResults(result);
+      }
+      
+      // Reload markets to show updated status
+      await loadAllMarkets();
+    } catch (err: any) {
+      console.error('Failed to resolve markets:', err);
+      setError(err.response?.data?.error || err.message || 'Failed to resolve markets');
+    } finally {
+      setResolvingMarkets(false);
+    }
+  };
+
   return (
     <div className={`App ${showIntro ? 'intro-active' : ''}`}>
       {stars.map((star) => (
@@ -974,6 +1002,47 @@ function App() {
             <section className="markets-section">
               {marketView === 'browse' && (
                 <div className="markets-browse">
+                  <div className="markets-header">
+                    <h3>All Markets</h3>
+                    <button 
+                      onClick={handleResolveAllMarkets} 
+                      className="btn resolve-all-btn"
+                      disabled={resolvingMarkets}
+                    >
+                      {resolvingMarkets ? 'Resolving...' : 'Resolve Outstanding Markets'}
+                    </button>
+                  </div>
+                  
+                  {resolutionResults && resolutionResults.results && (
+                    <div className="resolution-results">
+                      <h4>Resolution Results</h4>
+                      <div className="results-summary">
+                        <p>Total Markets: {resolutionResults.totalMarkets}</p>
+                        <p>Successfully Resolved: {resolutionResults.successCount}</p>
+                        {resolutionResults.failureCount > 0 && <p>Failed: {resolutionResults.failureCount}</p>}
+                      </div>
+                      <details className="results-details">
+                        <summary>View Details</summary>
+                        <div className="results-list">
+                          {resolutionResults.results.map((result: any, index: number) => (
+                            <div key={index} className={`result-item ${result.success ? 'success' : 'error'}`}>
+                              <p><strong>Market:</strong> <code>{result.market}</code></p>
+                              <p><strong>Question:</strong> {result.question}</p>
+                              {result.success ? (
+                                <>
+                                  <p><strong>Outcome:</strong> {result.outcome ? 'TRUE' : 'FALSE'}</p>
+                                  {result.txHash && <p><strong>TX:</strong> <code>{result.txHash}</code></p>}
+                                </>
+                              ) : (
+                                <p><strong>Error:</strong> {result.error}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    </div>
+                  )}
+                  
                   {allMarkets.length === 0 ? (
                     <div className="no-markets">
                       <p>No markets found. Be the first to create one!</p>

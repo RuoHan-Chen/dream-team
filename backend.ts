@@ -34,6 +34,30 @@ import { sepolia } from 'viem/chains';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
+// Flow testnet chain configuration
+const flowTestnet = {
+  id: 545,
+  name: 'Flow EVM Testnet', 
+  network: 'flowTestnet',
+  nativeCurrency: {
+    name: 'Flow',
+    symbol: 'FLOW',
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://testnet.evm.nodes.onflow.org'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Flowscan',
+      url: 'https://evm-testnet.flowscan.io',
+    },
+  },
+  testnet: true,
+} as const;
+
 // Load environment variables
 config({ path: ".env" });
 
@@ -67,8 +91,8 @@ if (deployerPrivateKey && oracleAddress && stablecoinAddress) {
   const account = privateKeyToAccount(deployerPrivateKey.startsWith('0x') ? deployerPrivateKey as `0x${string}` : `0x${deployerPrivateKey}` as `0x${string}`);
   walletClient = createWalletClient({
     account,
-    chain: sepolia,
-    transport: http(process.env.SEPOLIA_RPC_URL)
+    chain: flowTestnet,
+    transport: http(process.env.FLOW_RPC_URL || flowTestnet.rpcUrls.default.http[0])
   }).extend(publicActions);
 
   // Load contract artifact
@@ -599,7 +623,17 @@ app.post("/api/search/answer", async (c) => {
       let paymentRequirements: PaymentRequirements[];
       try {
         paymentRequirements = [createExactPaymentRequirements(
-          priceString,
+          {
+            amount: "100000",
+            asset: {
+              address: "0xabc",
+              decimals: 6,
+              eip712: {
+                name: "PYUSD", // TODO get these from block explorer, hard code in 
+                version: "1",
+              },
+            },
+          },
           resourceUrl,
           priceDescription
         )];
@@ -1120,6 +1154,107 @@ app.post("/api/admin/execute-scheduled", async (c) => {
   } catch (error) {
     console.error("Error in manual execution:", error);
     return c.json({ error: "Failed to execute queries" }, 500);
+  }
+});
+
+// Admin endpoint to resolve all outstanding markets (for testing)
+app.post("/api/admin/resolve-all-markets", async (c) => {
+  try {
+    console.log("Resolving all outstanding markets...");
+    
+    // Get all markets that are ready to be resolved
+    const markets = await database.getAllMarkets();
+    const marketsToResolve = markets.filter(market => {
+      // Check if market has been executed but not agent resolved
+      return market.status === 'completed' && !market.agent_resolved && market.summary;
+    });
+
+    console.log(`Found ${marketsToResolve.length} markets ready for resolution`);
+
+    if (marketsToResolve.length === 0) {
+      return c.json({ message: "No markets ready for resolution" });
+    }
+
+    const results = [];
+    
+    for (const market of marketsToResolve) {
+      console.log(`Resolving market ${market.market_contract_address}: "${market.market_question}"`);
+      
+      try {
+        // Import the resolver function dynamically to avoid circular dependencies
+        const { resolveMarketFromScheduler } = await import('./agent/market-resolver-agent');
+        
+        // Parse the sources if they're stored as a string
+        const sources = market.sources ? (typeof market.sources === 'string' ? JSON.parse(market.sources) : market.sources) : [];
+        
+        const resolveResult = await resolveMarketFromScheduler(
+          market.market_contract_address,
+          market.market_question,
+          market.summary || '',
+          sources
+        );
+        
+        if (resolveResult.success) {
+          // Extract transaction hash from agent message if available
+          const txHashMatch = resolveResult.message.match(/Transaction Hash:\*?\*?\s*([0-9a-fA-Fx]+)/);
+          const txHash = txHashMatch ? txHashMatch[1] : '';
+          
+          // Store the agent's resolution data in the database
+          if (resolveResult.outcome !== undefined) {
+            await database.updateMarketResolution(
+              market.market_contract_address,
+              resolveResult.outcome,
+              txHash,
+              resolveResult.message
+            );
+            
+            results.push({
+              market: market.market_contract_address,
+              question: market.market_question,
+              success: true,
+              outcome: resolveResult.outcome,
+              txHash: txHash || 'Not found in message'
+            });
+          } else {
+            results.push({
+              market: market.market_contract_address,
+              question: market.market_question,
+              success: false,
+              error: 'Could not determine outcome from agent'
+            });
+          }
+        } else {
+          results.push({
+            market: market.market_contract_address,
+            question: market.market_question,
+            success: false,
+            error: resolveResult.message
+          });
+        }
+      } catch (error) {
+        console.error(`Error resolving market ${market.market_contract_address}:`, error);
+        results.push({
+          market: market.market_contract_address,
+          question: market.market_question,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+
+    const successCount = results.filter(r => r.success).length;
+    const failureCount = results.filter(r => !r.success).length;
+
+    return c.json({
+      message: `Resolved ${successCount} markets successfully, ${failureCount} failed`,
+      totalMarkets: marketsToResolve.length,
+      successCount,
+      failureCount,
+      results
+    });
+  } catch (error) {
+    console.error("Error resolving markets:", error);
+    return c.json({ error: "Failed to resolve markets" }, 500);
   }
 });
 

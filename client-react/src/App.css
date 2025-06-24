@@ -1421,6 +1421,117 @@ h1, h2, h3, h4, h5, h6, p, span, div, label {
   margin: 0 auto;
 }
 
+.markets-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.markets-header h3 {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-family: 'Roboto Mono', monospace;
+  margin: 0;
+}
+
+.resolve-all-btn {
+  background-color: rgba(76, 175, 80, 0.15);
+  border-color: rgba(76, 175, 80, 0.3);
+  color: #ffffff;
+}
+
+.resolve-all-btn:hover:not(:disabled) {
+  background-color: rgba(76, 175, 80, 0.25);
+  border-color: rgba(76, 175, 80, 0.4);
+  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.2);
+}
+
+.resolve-all-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.resolution-results {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 30px;
+  backdrop-filter: blur(10px);
+}
+
+.resolution-results h4 {
+  color: #ffffff;
+  font-family: 'Roboto Mono', monospace;
+  margin-bottom: 15px;
+}
+
+.results-summary {
+  margin-bottom: 15px;
+}
+
+.results-summary p {
+  color: #d0d0d0;
+  font-family: 'Roboto Mono', monospace;
+  margin-bottom: 5px;
+}
+
+.results-details {
+  margin-top: 15px;
+}
+
+.results-details summary {
+  cursor: pointer;
+  color: #42a5f5;
+  font-weight: 500;
+  padding: 5px;
+  user-select: none;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.results-details summary:hover {
+  text-decoration: underline;
+}
+
+.results-list {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.result-item {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 15px;
+  border-left: 4px solid;
+}
+
+.result-item.success {
+  border-left-color: #4caf50;
+}
+
+.result-item.error {
+  border-left-color: #f44336;
+}
+
+.result-item p {
+  color: #d0d0d0;
+  margin-bottom: 5px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 14px;
+}
+
+.result-item code {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 12px;
+  word-break: break-all;
+}
+
 .no-markets {
   text-align: center;
   color: #a0a0a0;
